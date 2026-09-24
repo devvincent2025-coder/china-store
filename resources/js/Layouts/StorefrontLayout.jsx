@@ -113,8 +113,11 @@ const CHANNEL_DEFS = [
  * Persistent layout for buyer-facing pages — Taobao-inspired marketplace chrome:
  * utility strip, logo + search, channel links, then page body.
  */
-export default function StorefrontLayout({ children, categories = [], showCategoryBar = false }) {
-    const { auth, cartCount = 0, locale = 'en' } = usePage().props;
+export default function StorefrontLayout({ children, categories: pageCategories, showCategoryBar = false }) {
+    const { auth, cartCount = 0, locale = 'en', navCategories = [] } = usePage().props;
+    // A page's own list (e.g. Kids, which includes subcategories) wins; everywhere else falls back
+    // to the shared top-level list from HandleInertiaRequests.
+    const categories = pageCategories?.length ? pageCategories : navCategories;
     const user = auth?.user;
     const isVendor = auth?.isVendor ?? false;
     const { __ } = useTranslation();
@@ -159,7 +162,7 @@ export default function StorefrontLayout({ children, categories = [], showCatego
     return (
         <div className="flex min-h-screen flex-col bg-white font-sans text-tb-text">
             <div className="border-b border-tb-border bg-[#f5f5f5] font-ui text-[12px] text-tb-muted">
-                <div className="mx-auto flex h-8 max-w-marketplace items-center justify-between px-1.5 sm:px-2">
+                <div className="mx-auto flex min-h-8 max-w-marketplace items-center justify-between px-1.5 pb-1.5 pt-2.5 sm:h-8 sm:px-2 sm:py-0">
                     <div className="flex items-center gap-3">
                         <span className="hidden sm:inline">{__('Deliver to Nigeria')}</span>
                         <span className="hidden text-tb-border sm:inline">|</span>
@@ -184,7 +187,8 @@ export default function StorefrontLayout({ children, categories = [], showCatego
                                         </span>
                                     )}
                                 </span>
-                                {__('Hi, :name', { name: user.name })}
+                                <span className="sm:hidden">{__('Hi, :name', { name: user.name?.trim().split(/\s+/)[0] })}</span>
+                                <span className="hidden sm:inline">{__('Hi, :name', { name: user.name })}</span>
                             </Link>
                         )}
                         {isVendor && (
@@ -236,8 +240,8 @@ export default function StorefrontLayout({ children, categories = [], showCatego
                         </Link>
                         {/* Mobile-only quick links — "Categories" (its dropdown panel is a
                             full-width white card below the header, same treatment as the "Menu"
-                            panel further down, not a small popover anchored to this button) and an
-                            "Open a shop" link, alongside the language picker (the desktop language
+                            panel further down, not a small popover anchored to this button) and, for
+                            guests only, an "Open a shop" link, alongside the language picker (the desktop language
                             picker above is `sm:flex`, hidden below that breakpoint). */}
                         <div className="flex flex-wrap items-center justify-end gap-2 sm:hidden">
                             <button
@@ -251,12 +255,11 @@ export default function StorefrontLayout({ children, categories = [], showCatego
                             >
                                 {__('Categories')}
                             </button>
-                            <Link
-                                href={isVendor ? route('vendor.dashboard') : route('open-shop')}
-                                className="hover:text-tb"
-                            >
-                                {isVendor ? __('Vendor Dashboard') : __('Open a shop')}
-                            </Link>
+                            {!user && (
+                                <Link href={route('open-shop')} className="hover:text-tb">
+                                    {__('Open a shop')}
+                                </Link>
+                            )}
                             {LANGUAGES.map((lang) => (
                                 <a
                                     key={lang.code}

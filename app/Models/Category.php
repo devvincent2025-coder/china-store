@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Cache;
 use Spatie\Translatable\HasTranslations;
 
 class Category extends Model
@@ -22,6 +23,15 @@ class Category extends Model
         'sort_order',
         'is_active',
     ];
+
+    protected static function booted(): void
+    {
+        // Header/footer nav list shared by HandleInertiaRequests — refresh it as soon as an admin
+        // adds, renames, reorders or deactivates a category, rather than waiting out its TTL.
+        $forget = fn () => Cache::forget('nav-categories');
+        static::saved($forget);
+        static::deleted($forget);
+    }
 
     protected function casts(): array
     {

@@ -2,9 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Category;
 use App\Services\Cart\CartResolver;
 use App\Support\Seo\Seo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -80,6 +82,16 @@ class HandleInertiaRequests extends Middleware
             // Sum of line quantities so the header cart badge stays accurate across pages — a
             // guest's own (cookie-identified) cart counts too, see CartResolver::count().
             'cartCount' => $cartResolver->count($request),
+            // Top-level categories for StorefrontLayout's header/footer navigation (mobile
+            // "Categories" dropdown, desktop search category picker, footer links). Shared here so
+            // every storefront page has them — previously only pages whose controller happened to
+            // pass a `categories` prop did, and the dropdown silently rendered nothing elsewhere.
+            // Cached as models (not arrays) so translatable names still serialize per-locale.
+            'navCategories' => fn () => Cache::remember('nav-categories', 600, fn () => Category::query()
+                ->whereNull('parent_id')
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->get(['id', 'parent_id', 'slug', 'name', 'image_url', 'sort_order'])),
             // Fallback SEO data every page gets even before it's been given bespoke treatment via
             // a page-specific `seo` prop (see App\Support\Seo\Seo) — read by both
             // resources/views/app.blade.php (server-side, first paint/crawlers) and

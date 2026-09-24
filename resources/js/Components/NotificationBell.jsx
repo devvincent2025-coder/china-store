@@ -141,7 +141,10 @@ export default function NotificationBell() {
             </button>
 
             {open && (
-                <div className="absolute right-0 z-50 mt-2 w-80 rounded-lg border border-neutral-200 bg-white shadow-lg">
+                // On phones the bell sits mid-bar, so a w-80 panel anchored to its right edge ran off
+                // the left of the screen. Below sm it's viewport-fixed and inset from both edges
+                // instead; top stays auto, so it still opens directly under the bell.
+                <div className="fixed inset-x-2 z-50 mt-2 rounded-lg border border-neutral-200 bg-white shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:w-80">
                     <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-2.5">
                         <span className="text-sm font-semibold text-neutral-800">{__('Notifications')}</span>
                         {unreadCount > 0 && (
@@ -151,7 +154,7 @@ export default function NotificationBell() {
                         )}
                     </div>
 
-                    <div className="max-h-96 overflow-y-auto">
+                    <div className="max-h-[60vh] overflow-y-auto sm:max-h-96">
                         {recent.length === 0 ? (
                             <p className="px-4 py-8 text-center text-sm text-neutral-400">{__('No notifications yet.')}</p>
                         ) : (

@@ -439,7 +439,8 @@ export default function Home({
                         ))}
                     </div>
 
-                    <div className="mt-[10px] lg:hidden">
+                    {/* Hidden on phones (below sm) to keep the mobile home page short; tablets still get it. */}
+                    <div className="mt-[10px] hidden sm:block lg:hidden">
                         <UserPanel coupons={coupons} />
                     </div>
                 </section>

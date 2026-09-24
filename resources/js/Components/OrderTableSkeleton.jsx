@@ -4,7 +4,25 @@
  */
 export default function OrderTableSkeleton({ rows = 6 }) {
     return (
-        <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
+        <>
+            {/* Mobile: mirrors Orders/Index.jsx's card list. */}
+            <div className="animate-pulse space-y-3 sm:hidden">
+                {Array.from({ length: rows }).map((_, i) => (
+                    <div key={i} className="flex items-start gap-3 rounded-lg border border-neutral-200 bg-white p-3">
+                        <div className="h-12 w-12 shrink-0 rounded-md bg-neutral-200" />
+                        <div className="flex-1 space-y-2">
+                            <div className="flex justify-between">
+                                <div className="h-3 w-28 rounded bg-neutral-200" />
+                                <div className="h-4 w-14 rounded-full bg-neutral-200" />
+                            </div>
+                            <div className="h-3 w-40 rounded bg-neutral-200" />
+                            <div className="h-3 w-32 rounded bg-neutral-200" />
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+        <div className="hidden overflow-hidden rounded-lg border border-neutral-200 bg-white sm:block">
             <table className="w-full text-sm">
                 <thead className="bg-neutral-50 text-left text-xs uppercase text-neutral-500">
                     <tr>
@@ -28,5 +46,6 @@ export default function OrderTableSkeleton({ rows = 6 }) {
                 </tbody>
             </table>
         </div>
+        </>
     );
 }
