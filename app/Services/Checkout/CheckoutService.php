@@ -245,9 +245,17 @@ class CheckoutService
                     ? $product->variants()->lockForUpdate()->find($item->product_variant_id)?->stock ?? 0
                     : $product->stock;
 
+                // Re-read under lock at the moment of ordering — another buyer may have bought the
+                // stock since this cart was filled, even though CartController capped it back then.
                 if ($available < $item->quantity) {
                     throw ValidationException::withMessages([
-                        'cart' => "Not enough stock for {$product->getTranslation('title', 'en')}.",
+                        'cart' => $available <= 0
+                            ? __('Sorry, ":title" has just sold out. Please remove it from your cart to continue.', ['title' => $product->title])
+                            : __('Only :available of ":title" left in stock, but your cart has :quantity. Please reduce the quantity to continue.', [
+                                'available' => $available,
+                                'title' => $product->title,
+                                'quantity' => $item->quantity,
+                            ]),
                     ]);
                 }
             }

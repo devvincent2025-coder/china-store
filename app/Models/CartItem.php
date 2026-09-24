@@ -20,6 +20,20 @@ class CartItem extends Model
         'unit_price',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            // Integer casts for non-key int columns: some MySQL drivers (production's included)
+            // return them as strings, which breaks strict === id checks and JSON consumers.
+            'cart_id' => 'integer',
+            'product_id' => 'integer',
+            'product_variant_id' => 'integer',
+            'vendor_id' => 'integer',
+            'quantity' => 'integer',
+            'unit_price' => 'integer',
+        ];
+    }
+
     protected $appends = ['original_unit_price', 'min_order_quantity'];
 
     public function cart(): BelongsTo

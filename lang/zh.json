@@ -848,5 +848,17 @@
     "Download Invoice": "下载发票",
     "left to confirm receipt or report a problem": "剩余时间可确认收货或举报问题",
     "Confirming…": "确认中…",
-    "1 item": "1 件商品"
+    "1 item": "1 件商品",
+    "Sorry, \":title\" has just sold out. Please remove it from your cart to continue.": "抱歉，“:title”刚刚售罄。请将其从购物车中移除后继续。",
+    "Only :available of \":title\" left in stock, but your cart has :quantity. Please reduce the quantity to continue.": "“:title”仅剩 :available 件库存，但您的购物车中有 :quantity 件。请减少数量后继续。",
+    "This quantity is not available for this item.": "该商品不支持此数量。",
+    "This item is out of stock.": "该商品已售罄。",
+    "Only :count left in stock.": "仅剩 :count 件库存。",
+    "Update your cart": "更新购物车",
+    "Remove from cart": "从购物车移除",
+    "Decrease quantity": "减少数量",
+    "Increase quantity": "增加数量",
+    "Updating cart…": "正在更新购物车…",
+    "In your cart": "已在购物车中",
+    "View cart": "查看购物车"
 }

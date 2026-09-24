@@ -40,6 +40,15 @@ class Product extends Model
     protected function casts(): array
     {
         return [
+            // Integer casts for non-key int columns: some MySQL drivers (production's included)
+            // return them as strings, which breaks strict === id checks and JSON consumers.
+            'vendor_id' => 'integer',
+            'category_id' => 'integer',
+            'price' => 'integer',
+            'compare_price' => 'integer',
+            'stock' => 'integer',
+            'taken_down_by' => 'integer',
+            'views_count' => 'integer',
             'is_featured' => 'boolean',
             'taken_down_at' => 'datetime',
             'flagged_at' => 'datetime',

@@ -29,6 +29,13 @@ class Coupon extends Model
     protected function casts(): array
     {
         return [
+            // Integer casts for non-key int columns: some MySQL drivers (production's included)
+            // return them as strings, which breaks strict === id checks and JSON consumers.
+            'vendor_id' => 'integer',
+            'value' => 'integer',
+            'minimum_spend' => 'integer',
+            'usage_limit' => 'integer',
+            'used_count' => 'integer',
             'starts_at' => 'datetime',
             'expires_at' => 'datetime',
             'is_active' => 'boolean',

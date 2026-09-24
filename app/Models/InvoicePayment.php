@@ -23,6 +23,10 @@ class InvoicePayment extends Model
     protected function casts(): array
     {
         return [
+            // Integer casts for non-key int columns: some MySQL drivers (production's included)
+            // return them as strings, which breaks strict === id checks and JSON consumers.
+            'invoice_id' => 'integer',
+            'amount' => 'integer',
             'paid_at' => 'datetime',
         ];
     }

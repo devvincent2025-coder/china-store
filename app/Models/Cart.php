@@ -19,6 +19,15 @@ class Cart extends Model
     // hidden here too as a defensive default in case that ever changes.
     protected $hidden = ['guest_token'];
 
+    protected function casts(): array
+    {
+        return [
+            // Integer casts for non-key int columns: some MySQL drivers (production's included)
+            // return them as strings, which breaks strict === id checks and JSON consumers.
+            'user_id' => 'integer',
+        ];
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

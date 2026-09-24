@@ -25,6 +25,11 @@ class ProductImage extends Model
     protected function casts(): array
     {
         return [
+            // Integer casts for non-key int columns: some MySQL drivers (production's included)
+            // return them as strings, which breaks strict === id checks and JSON consumers.
+            'product_id' => 'integer',
+            'enhanced_size_bytes' => 'integer',
+            'sort_order' => 'integer',
             'is_primary' => 'boolean',
         ];
     }

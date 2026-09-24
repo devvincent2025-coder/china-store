@@ -16,6 +16,16 @@ class AdminActivityLog extends Model
         'description',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            // Integer casts for non-key int columns: some MySQL drivers (production's included)
+            // return them as strings, which breaks strict === id checks and JSON consumers.
+            'admin_user_id' => 'integer',
+            'subject_id' => 'integer',
+        ];
+    }
+
     /**
      * Records one admin action. Called from Filament resource/page actions rather than a generic
      * model observer, since not every change to these models is admin-initiated (e.g. a webhook

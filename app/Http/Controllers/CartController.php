@@ -46,7 +46,9 @@ class CartController extends Controller
         $variant = null;
         if ($validated['product_variant_id'] ?? null) {
             $variant = ProductVariant::findOrFail($validated['product_variant_id']);
-            abort_unless($variant->product_id === $product->id, 422, 'That variant does not belong to this product.');
+            // A 404 like the product check above, not a bare 422 — a 422 HttpException isn't a
+            // validation error Inertia can show inline; it renders as a full-page error dialog.
+            abort_unless($variant->product_id === $product->id, 404);
         }
 
         $cart = $this->carts->resolve($request);
@@ -60,6 +62,7 @@ class CartController extends Controller
         // assignment below), so the tier/MOQ check must run against the RESULTING quantity, not
         // just the amount being added this time.
         $resultingQuantity = ($item->exists ? $item->quantity : 0) + $validated['quantity'];
+        $this->assertWithinStock($product, $variant, $resultingQuantity);
         $unitPrice = $this->resolveTieredPrice($product, $variant, $resultingQuantity);
 
         $item->vendor_id = $product->vendor_id;
@@ -81,6 +84,7 @@ class CartController extends Controller
         // line was first added, even after crossing into a cheaper (or now-invalid) bulk-pricing
         // tier. Recomputing here keeps the cart's displayed price honest between add-to-cart and
         // checkout (CheckoutService re-does this same check as a final safety net).
+        $this->assertWithinStock($item->product, $item->variant, $validated['quantity']);
         $unitPrice = $this->resolveTieredPrice($item->product, $item->variant, $validated['quantity']);
 
         $item->update(['quantity' => $validated['quantity'], 'unit_price' => $unitPrice]);
@@ -102,9 +106,30 @@ class CartController extends Controller
 
         // Only possible if a vendor's tier list somehow has a gap above the MOQ — defensive, since
         // ProductPriceTierSyncService::validateTiers() should prevent this at write time.
-        abort_if($unitPrice === null, 422, 'This quantity is not available for this item.');
+        if ($unitPrice === null) {
+            throw ValidationException::withMessages([
+                'quantity' => __('This quantity is not available for this item.'),
+            ]);
+        }
 
         return $unitPrice;
+    }
+
+    /**
+     * Caps a cart line at what's in stock right now. Only a soft guard — stock can still sell out
+     * between here and payment, which CheckoutService::assertStockAvailable() re-checks under lock.
+     */
+    private function assertWithinStock(Product $product, ?ProductVariant $variant, int $quantity): void
+    {
+        $available = $variant ? $variant->stock : $product->stock;
+
+        if ($quantity > $available) {
+            throw ValidationException::withMessages([
+                'quantity' => $available <= 0
+                    ? __('This item is out of stock.')
+                    : __('Only :count left in stock.', ['count' => $available]),
+            ]);
+        }
     }
 
     public function destroy(Request $request, int $cartItem): RedirectResponse

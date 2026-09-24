@@ -848,5 +848,17 @@
     "Download Invoice": "Download Invoice",
     "left to confirm receipt or report a problem": "left to confirm receipt or report a problem",
     "Confirming…": "Confirming…",
-    "1 item": "1 item"
+    "1 item": "1 item",
+    "Sorry, \":title\" has just sold out. Please remove it from your cart to continue.": "Sorry, \":title\" has just sold out. Please remove it from your cart to continue.",
+    "Only :available of \":title\" left in stock, but your cart has :quantity. Please reduce the quantity to continue.": "Only :available of \":title\" left in stock, but your cart has :quantity. Please reduce the quantity to continue.",
+    "This quantity is not available for this item.": "This quantity is not available for this item.",
+    "This item is out of stock.": "This item is out of stock.",
+    "Only :count left in stock.": "Only :count left in stock.",
+    "Update your cart": "Update your cart",
+    "Remove from cart": "Remove from cart",
+    "Decrease quantity": "Decrease quantity",
+    "Increase quantity": "Increase quantity",
+    "Updating cart…": "Updating cart…",
+    "In your cart": "In your cart",
+    "View cart": "View cart"
 }

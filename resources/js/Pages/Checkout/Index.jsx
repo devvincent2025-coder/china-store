@@ -357,6 +357,16 @@ export default function Index({ itemsByVendor, errors, savedAddresses = [], escr
                                 <span className="text-sm font-semibold text-neutral-800">{__('Grand Total')}</span>
                                 <span className="text-2xl font-bold text-orange-600">{formatNaira(grandTotal)}</span>
                             </div>
+                            {/* CheckoutService's final stock/MOQ gate reports under `cart` — without this
+                                the order was rejected with nothing shown to the buyer. */}
+                            {formErrors.cart && (
+                                <div role="alert" className="mb-3 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                                    <p>{formErrors.cart}</p>
+                                    <Link href={route('cart.index')} className="mt-1 inline-block font-semibold underline">
+                                        {__('Update your cart')}
+                                    </Link>
+                                </div>
+                            )}
                             <button
                                 type="submit"
                                 disabled={processing}

@@ -848,5 +848,17 @@
     "Download Invoice": "Télécharger la facture",
     "left to confirm receipt or report a problem": "restant pour confirmer la réception ou signaler un problème",
     "Confirming…": "Confirmation…",
-    "1 item": "1 article"
+    "1 item": "1 article",
+    "Sorry, \":title\" has just sold out. Please remove it from your cart to continue.": "Désolé, « :title » vient d'être épuisé. Veuillez le retirer de votre panier pour continuer.",
+    "Only :available of \":title\" left in stock, but your cart has :quantity. Please reduce the quantity to continue.": "Il ne reste que :available « :title » en stock, mais votre panier en contient :quantity. Veuillez réduire la quantité pour continuer.",
+    "This quantity is not available for this item.": "Cette quantité n'est pas disponible pour cet article.",
+    "This item is out of stock.": "Cet article est en rupture de stock.",
+    "Only :count left in stock.": "Plus que :count en stock.",
+    "Update your cart": "Mettre à jour votre panier",
+    "Remove from cart": "Retirer du panier",
+    "Decrease quantity": "Diminuer la quantité",
+    "Increase quantity": "Augmenter la quantité",
+    "Updating cart…": "Mise à jour du panier…",
+    "In your cart": "Dans votre panier",
+    "View cart": "Voir le panier"
 }

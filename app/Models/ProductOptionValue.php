@@ -24,6 +24,16 @@ class ProductOptionValue extends Model
         'sort_order',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            // Integer casts for non-key int columns: some MySQL drivers (production's included)
+            // return them as strings, which breaks strict === id checks and JSON consumers.
+            'product_option_id' => 'integer',
+            'sort_order' => 'integer',
+        ];
+    }
+
     public function option(): BelongsTo
     {
         return $this->belongsTo(ProductOption::class, 'product_option_id');

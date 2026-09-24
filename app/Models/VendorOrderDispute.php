@@ -34,6 +34,10 @@ class VendorOrderDispute extends Model
     protected function casts(): array
     {
         return [
+            // Integer casts for non-key int columns: some MySQL drivers (production's included)
+            // return them as strings, which breaks strict === id checks and JSON consumers.
+            'vendor_order_id' => 'integer',
+            'resolved_by' => 'integer',
             'evidence' => 'array',
             'vendor_evidence' => 'array',
             'vendor_response_deadline' => 'datetime',

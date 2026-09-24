@@ -38,6 +38,16 @@ class Invoice extends Model
     protected function casts(): array
     {
         return [
+            // Integer casts for non-key int columns: some MySQL drivers (production's included)
+            // return them as strings, which breaks strict === id checks and JSON consumers.
+            'vendor_id' => 'integer',
+            'subtotal' => 'integer',
+            'discount' => 'integer',
+            'vat_amount' => 'integer',
+            'shipping_amount' => 'integer',
+            'total' => 'integer',
+            'amount_paid' => 'integer',
+            'minimum_partial_amount' => 'integer',
             'allow_partial_payment' => 'boolean',
             'due_date' => 'date',
             'sent_at' => 'datetime',

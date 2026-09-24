@@ -27,6 +27,16 @@ class VendorStore extends Model
         'country',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            // Integer casts for non-key int columns: some MySQL drivers (production's included)
+            // return them as strings, which breaks strict === id checks and JSON consumers.
+            'vendor_id' => 'integer',
+            'category_id' => 'integer',
+        ];
+    }
+
     public function vendor(): BelongsTo
     {
         return $this->belongsTo(Vendor::class);

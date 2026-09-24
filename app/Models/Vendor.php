@@ -75,6 +75,17 @@ class Vendor extends Model
     protected function casts(): array
     {
         return [
+            // Integer casts for non-key int columns: some MySQL drivers (production's included)
+            // return them as strings, which breaks strict === id checks and JSON consumers.
+            'user_id' => 'integer',
+            'documents_reviewed_by' => 'integer',
+            'bank_change_reviewed_by' => 'integer',
+            'identity_reviewed_by' => 'integer',
+            'shipping_fee_fixed_amount' => 'integer',
+            'suspended_by' => 'integer',
+            'low_stock_threshold' => 'integer',
+            'delivery_days_min' => 'integer',
+            'delivery_days_max' => 'integer',
             'verification_documents' => 'array',
             'bank_verification_response' => 'array',
             'documents_reviewed_at' => 'datetime',

@@ -36,6 +36,10 @@ class Category extends Model
     protected function casts(): array
     {
         return [
+            // Integer casts for non-key int columns: some MySQL drivers (production's included)
+            // return them as strings, which breaks strict === id checks and JSON consumers.
+            'parent_id' => 'integer',
+            'sort_order' => 'integer',
             'is_active' => 'boolean',
         ];
     }

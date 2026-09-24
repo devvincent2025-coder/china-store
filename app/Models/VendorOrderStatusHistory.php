@@ -16,6 +16,15 @@ class VendorOrderStatusHistory extends Model
         'note',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            // Integer casts for non-key int columns: some MySQL drivers (production's included)
+            // return them as strings, which breaks strict === id checks and JSON consumers.
+            'vendor_order_id' => 'integer',
+        ];
+    }
+
     public function vendorOrder(): BelongsTo
     {
         return $this->belongsTo(VendorOrder::class);

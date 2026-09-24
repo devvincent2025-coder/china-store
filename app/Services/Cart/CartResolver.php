@@ -24,7 +24,7 @@ class CartResolver
     public function resolve(Request $request): Cart
     {
         if ($request->user()) {
-            return $request->user()->cart ?? $request->user()->cart()->create();
+            return $request->user()->cart()->firstOrCreate();
         }
 
         $token = $request->cookie(self::COOKIE);
@@ -48,17 +48,23 @@ class CartResolver
      */
     public function count(Request $request): int
     {
+        return (int) ($this->existing($request)?->items()->sum('quantity') ?? 0);
+    }
+
+    /**
+     * The current buyer's cart if they already have one, without creating one — same reasoning as
+     * count() above. Used anywhere a page only needs to READ the cart (e.g. the product page's
+     * "already in your cart" state).
+     */
+    public function existing(Request $request): ?Cart
+    {
         if ($request->user()) {
-            return (int) ($request->user()->cart?->items()->sum('quantity') ?? 0);
+            return $request->user()->cart()->first();
         }
 
         $token = $request->cookie(self::COOKIE);
 
-        if (! $token) {
-            return 0;
-        }
-
-        return (int) (Cart::where('guest_token', $token)->first()?->items()->sum('quantity') ?? 0);
+        return $token ? Cart::where('guest_token', $token)->first() : null;
     }
 
     private function createGuestCart(): Cart

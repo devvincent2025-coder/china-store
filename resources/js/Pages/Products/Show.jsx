@@ -1,4 +1,4 @@
-import { Link, useForm } from '@inertiajs/react';
+import { Link, router, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 import DOMPurify from 'dompurify';
 import StorefrontLayout from '@/Layouts/StorefrontLayout';
@@ -142,8 +142,10 @@ function CouponStrip({ coupons }) {
     );
 }
 
-export default function Show({ product, relatedProducts, otherSellers = [], coupons = [], seo }) {
+export default function Show({ product, relatedProducts, otherSellers = [], coupons = [], cartLines = [], seo }) {
     const { __ } = useTranslation();
+    const { errors: pageErrors = {} } = usePage().props;
+    const [updatingCart, setUpdatingCart] = useState(false);
     const images = product.images ?? [];
     const [activeImage, setActiveImage] = useState(0);
     const options = product.options ?? [];
@@ -170,12 +172,12 @@ export default function Show({ product, relatedProducts, otherSellers = [], coup
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [variant?.id]);
 
-    // Reset quantity to the (possibly new) MOQ whenever it changes — e.g. switching to a variant
-    // with a higher minimum order quantity than the one just selected.
+    // Reset quantity to the (possibly new) MOQ whenever it or the variant changes — e.g. switching
+    // to a variant with a higher minimum order quantity, or less stock, than the one just selected.
     useEffect(() => {
         setData('quantity', moq);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [moq]);
+    }, [moq, variant?.id]);
 
     const submit = (e) => {
         e.preventDefault();
@@ -188,6 +190,33 @@ export default function Show({ product, relatedProducts, otherSellers = [], coup
     const availableStock = options.length > 0 ? (variant ? variant.stock : 0) : product.stock;
     const meetsMoq = data.quantity >= moq;
     const canAddToCart = (options.length > 0 ? Boolean(variant) && availableStock > 0 : availableStock > 0) && meetsMoq;
+
+    // Once the selected product/variant is already in the cart, the stepper edits that cart line
+    // directly (no separate "Add to Cart" step). Stepping below the MOQ removes the line.
+    const cartLine = cartLines.find((line) => (line.product_variant_id ?? null) === (variant?.id ?? null)) ?? null;
+    const quantity = cartLine ? cartLine.quantity : data.quantity;
+    const canIncrease = !updatingCart && quantity < availableStock && (options.length === 0 || Boolean(variant));
+    const quantityError = errors.quantity || errors.product_id || pageErrors.quantity;
+
+    const changeQuantity = (next) => {
+        if (!cartLine) {
+            setData('quantity', Math.min(Math.max(moq, next), Math.max(moq, availableStock)));
+            return;
+        }
+
+        const visitOptions = {
+            preserveScroll: true,
+            preserveState: true,
+            onStart: () => setUpdatingCart(true),
+            onFinish: () => setUpdatingCart(false),
+        };
+
+        if (next < moq) {
+            router.delete(route('cart.destroy', cartLine.id), visitOptions);
+        } else {
+            router.patch(route('cart.update', cartLine.id), { quantity: Math.min(next, availableStock) }, visitOptions);
+        }
+    };
 
     const selectValue = (optionId, valueId) => {
         setSelection((prev) => ({ ...prev, [optionId]: valueId }));
@@ -349,23 +378,34 @@ export default function Show({ product, relatedProducts, otherSellers = [], coup
 
                             <div className="mb-2 flex items-center gap-3">
                                 <label className="text-sm font-medium text-neutral-700">{__('Quantity')}</label>
-                                <div className="flex items-center rounded-md border border-neutral-300">
+                                <div className="flex items-center gap-1">
                                     <button
                                         type="button"
-                                        onClick={() => setData('quantity', Math.max(moq, data.quantity - 1))}
-                                        className="px-3 py-1 text-neutral-600 hover:bg-neutral-100"
+                                        onClick={() => changeQuantity(quantity - 1)}
+                                        disabled={updatingCart || (!cartLine && quantity <= moq)}
+                                        aria-label={cartLine && quantity <= moq ? __('Remove from cart') : __('Decrease quantity')}
+                                        className="flex h-10 w-10 items-center justify-center rounded-md bg-orange-600 text-2xl font-bold leading-none text-white hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-40"
                                     >
                                         −
                                     </button>
-                                    <span className="w-10 text-center text-sm">{data.quantity}</span>
+                                    <span className="w-12 text-center text-base font-semibold text-neutral-800" aria-live="polite">
+                                        {quantity}
+                                    </span>
                                     <button
                                         type="button"
-                                        onClick={() => setData('quantity', data.quantity + 1)}
-                                        className="px-3 py-1 text-neutral-600 hover:bg-neutral-100"
+                                        onClick={() => changeQuantity(quantity + 1)}
+                                        disabled={!canIncrease}
+                                        aria-label={__('Increase quantity')}
+                                        className="flex h-10 w-10 items-center justify-center rounded-md bg-orange-600 text-2xl font-bold leading-none text-white hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-40"
                                     >
                                         +
                                     </button>
                                 </div>
+                                {availableStock > 0 && availableStock <= 10 && (
+                                    <span className="text-xs font-medium text-red-600">
+                                        {__('Only :count left in stock.', { count: availableStock })}
+                                    </span>
+                                )}
                                 {moq > 1 && (
                                     <span className="text-xs text-neutral-500">
                                         {__('Minimum order: :count', { count: moq })}
@@ -405,15 +445,29 @@ export default function Show({ product, relatedProducts, otherSellers = [], coup
                                 </div>
                             )}
 
-                            <InputError message={errors.quantity || errors.product_id} className="mb-2" />
+                            <InputError message={quantityError} className="mb-2" />
 
-                            <button
-                                type="submit"
-                                disabled={processing || !canAddToCart}
-                                className="w-full rounded-md bg-orange-600 py-3 text-sm font-semibold text-white hover:bg-orange-700 disabled:opacity-50 sm:w-auto sm:px-10"
-                            >
-                                {availableStock > 0 ? __('Add to Cart') : __('Out of Stock')}
-                            </button>
+                            {cartLine ? (
+                                <div className="flex flex-wrap items-center gap-3 text-sm">
+                                    <span className="inline-flex items-center gap-1.5 font-semibold text-green-700">
+                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        {updatingCart ? __('Updating cart…') : __('In your cart')}
+                                    </span>
+                                    <Link href={route('cart.index')} className="font-semibold text-orange-600 hover:underline">
+                                        {__('View cart')} →
+                                    </Link>
+                                </div>
+                            ) : (
+                                <button
+                                    type="submit"
+                                    disabled={processing || !canAddToCart}
+                                    className="w-full rounded-md bg-orange-600 py-3 text-sm font-semibold text-white hover:bg-orange-700 disabled:opacity-50 sm:w-auto sm:px-10"
+                                >
+                                    {availableStock > 0 ? __('Add to Cart') : __('Out of Stock')}
+                                </button>
+                            )}
                         </form>
 
                         <CouponStrip coupons={coupons} />

@@ -19,6 +19,19 @@ class Review extends Model
         'comment',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            // Integer casts for non-key int columns: some MySQL drivers (production's included)
+            // return them as strings, which breaks strict === id checks and JSON consumers.
+            'user_id' => 'integer',
+            'product_id' => 'integer',
+            'vendor_id' => 'integer',
+            'order_item_id' => 'integer',
+            'rating' => 'integer',
+        ];
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

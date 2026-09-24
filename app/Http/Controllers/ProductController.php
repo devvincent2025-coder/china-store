@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\VendorStore;
 use App\Services\Ads\AdCampaignService;
+use App\Services\Cart\CartResolver;
 use App\Services\Product\PriceComparisonService;
 use App\Support\Seo\Seo;
 use Illuminate\Http\Request;
@@ -142,7 +143,7 @@ class ProductController extends Controller
         ]);
     }
 
-    public function show(Request $request, Product $product, PriceComparisonService $comparisons): Response
+    public function show(Request $request, Product $product, PriceComparisonService $comparisons, CartResolver $carts): Response
     {
         abort_unless($product->status === 'published', 404);
 
@@ -171,6 +172,15 @@ class ProductController extends Controller
             // This vendor's currently-redeemable coupons — previously invisible anywhere except
             // the checkout coupon box itself (if a buyer already knew the code).
             'coupons' => $product->vendor->coupons()->currentlyValid()->get(['code', 'type', 'value', 'minimum_spend']),
+            // This product's lines already in the buyer's cart (one per variant), so the page can
+            // swap "Add to Cart" for a stepper that edits the existing line in place.
+            'cartLines' => $carts->existing($request)?->items()
+                ->where('product_id', $product->id)
+                ->get(['id', 'product_variant_id', 'quantity'])
+                // only(), not toArray(): CartItem's appended price attributes need columns (and
+                // relations) this page doesn't load or use.
+                ->map->only(['id', 'product_variant_id', 'quantity'])
+                ->values() ?? [],
             'seo' => Seo::forProduct($request, $product),
         ]);
     }

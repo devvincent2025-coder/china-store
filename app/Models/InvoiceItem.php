@@ -18,6 +18,18 @@ class InvoiceItem extends Model
         'line_total',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            // Integer casts for non-key int columns: some MySQL drivers (production's included)
+            // return them as strings, which breaks strict === id checks and JSON consumers.
+            'invoice_id' => 'integer',
+            'quantity' => 'integer',
+            'unit_price' => 'integer',
+            'line_total' => 'integer',
+        ];
+    }
+
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class);

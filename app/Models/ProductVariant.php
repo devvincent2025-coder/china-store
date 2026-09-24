@@ -20,6 +20,17 @@ class ProductVariant extends Model
         'image_url',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            // Integer casts for non-key int columns: some MySQL drivers (production's included)
+            // return them as strings, which breaks strict === id checks and JSON consumers.
+            'product_id' => 'integer',
+            'price' => 'integer',
+            'stock' => 'integer',
+        ];
+    }
+
     // Accessors aren't included in JSON serialization unless explicitly appended — the storefront
     // (Products/Show.jsx) reads `final_price`/`min_order_quantity` directly off a serialized
     // variant, so both must be here.

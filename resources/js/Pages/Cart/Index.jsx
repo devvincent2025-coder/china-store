@@ -13,6 +13,8 @@ export default function Index({ itemsByVendor }) {
     const grandTotal = itemsByVendor.reduce((sum, group) => sum + group.subtotal, 0);
     const isEmpty = itemsByVendor.length === 0;
 
+    const stockFor = (item) => Number(item.variant ? item.variant.stock : item.product?.stock) || 0;
+
     const updateQuantity = (item, quantity) => {
         const moq = item.min_order_quantity ?? 1;
         if (quantity < moq) return;
@@ -96,22 +98,32 @@ export default function Index({ itemsByVendor }) {
                                                             {__('Minimum order: :count', { count: item.min_order_quantity })}
                                                         </p>
                                                     )}
+                                                    {item.quantity > stockFor(item) && (
+                                                        <p className="mt-0.5 text-xs font-medium text-red-600">
+                                                            {stockFor(item) > 0
+                                                                ? __('Only :count left in stock.', { count: stockFor(item) })
+                                                                : __('This item is out of stock.')}
+                                                        </p>
+                                                    )}
                                                     {quantityErrors[item.id] && (
                                                         <p className="mt-0.5 text-xs text-red-600">{quantityErrors[item.id]}</p>
                                                     )}
                                                 </div>
-                                                <div className="flex items-center rounded-md border border-neutral-300">
+                                                <div className="flex items-center gap-1">
                                                     <button
                                                         onClick={() => updateQuantity(item, item.quantity - 1)}
                                                         disabled={item.quantity <= (item.min_order_quantity ?? 1)}
-                                                        className="px-2 py-1 text-neutral-600 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40"
+                                                        aria-label={__('Decrease quantity')}
+                                                        className="flex h-9 w-9 items-center justify-center rounded-md bg-orange-600 text-xl font-bold leading-none text-white hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-40"
                                                     >
                                                         −
                                                     </button>
-                                                    <span className="w-8 text-center text-sm">{item.quantity}</span>
+                                                    <span className="w-9 text-center text-base font-semibold">{item.quantity}</span>
                                                     <button
                                                         onClick={() => updateQuantity(item, item.quantity + 1)}
-                                                        className="px-2 py-1 text-neutral-600 hover:bg-neutral-100"
+                                                        disabled={item.quantity >= stockFor(item)}
+                                                        aria-label={__('Increase quantity')}
+                                                        className="flex h-9 w-9 items-center justify-center rounded-md bg-orange-600 text-xl font-bold leading-none text-white hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-40"
                                                     >
                                                         +
                                                     </button>

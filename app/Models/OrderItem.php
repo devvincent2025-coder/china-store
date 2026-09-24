@@ -26,6 +26,14 @@ class OrderItem extends Model
     protected function casts(): array
     {
         return [
+            // Integer casts for non-key int columns: some MySQL drivers (production's included)
+            // return them as strings, which breaks strict === id checks and JSON consumers.
+            'vendor_order_id' => 'integer',
+            'product_id' => 'integer',
+            'product_variant_id' => 'integer',
+            'quantity' => 'integer',
+            'unit_price' => 'integer',
+            'line_total' => 'integer',
             'product_title_snapshot' => 'array',
             'variant_label_snapshot' => 'array',
         ];

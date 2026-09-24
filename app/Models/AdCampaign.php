@@ -44,6 +44,16 @@ class AdCampaign extends Model
     protected function casts(): array
     {
         return [
+            // Integer casts for non-key int columns: some MySQL drivers (production's included)
+            // return them as strings, which breaks strict === id checks and JSON consumers.
+            'vendor_id' => 'integer',
+            'duration_days' => 'integer',
+            'amount_kobo' => 'integer',
+            'approved_by' => 'integer',
+            'impressions_count' => 'integer',
+            'clicks_count' => 'integer',
+            'total_dwell_seconds' => 'integer',
+            'dwell_samples_count' => 'integer',
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
             'paused_at' => 'datetime',

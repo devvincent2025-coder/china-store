@@ -30,6 +30,15 @@ class Order extends Model
     protected function casts(): array
     {
         return [
+            // Integer casts for non-key int columns: some MySQL drivers (production's included)
+            // return them as strings, which breaks strict === id checks and JSON consumers.
+            'user_id' => 'integer',
+            'original_subtotal' => 'integer',
+            'subtotal' => 'integer',
+            'discount_total' => 'integer',
+            'vat_total' => 'integer',
+            'shipping_total' => 'integer',
+            'total' => 'integer',
             'shipping_address' => 'array',
             'paid_at' => 'datetime',
         ];

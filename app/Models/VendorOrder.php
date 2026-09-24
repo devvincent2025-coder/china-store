@@ -39,6 +39,19 @@ class VendorOrder extends Model
     protected function casts(): array
     {
         return [
+            // Integer casts for non-key int columns: some MySQL drivers (production's included)
+            // return them as strings, which breaks strict === id checks and JSON consumers.
+            'order_id' => 'integer',
+            'vendor_id' => 'integer',
+            'coupon_id' => 'integer',
+            'original_subtotal' => 'integer',
+            'subtotal' => 'integer',
+            'discount' => 'integer',
+            'vat_amount' => 'integer',
+            'shipping_amount' => 'integer',
+            'total' => 'integer',
+            'commission_amount' => 'integer',
+            'payout_amount' => 'integer',
             'shipped_at' => 'datetime',
             'delivered_at' => 'datetime',
             'return_window_expires_at' => 'datetime',
