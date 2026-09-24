@@ -1,0 +1,212 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    body {
+        @apply font-sans text-tb-text;
+        font-family: Urbanist, Manrope, ui-sans-serif, system-ui, sans-serif;
+    }
+
+    h1, h2, h3, h4, .font-display, .font-brand {
+        font-family: Urbanist, Manrope, ui-sans-serif, system-ui, sans-serif;
+    }
+
+    .font-ui {
+        font-family: Manrope, Urbanist, ui-sans-serif, system-ui, sans-serif;
+    }
+}
+
+@layer components {
+    /* Mobile bottom tab bar (Components/MobileTabBar.jsx) — padding-bottom uses the safe-area
+       inset so the bar (and its tap targets) sit above an iPhone's home-indicator strip rather
+       than being partially covered by it once installed as a PWA. `pb-safe`/`h-safe-bottom`
+       degrade to plain 0 on a browser without env(safe-area-inset-*) support (the fallback value
+       in the max() call), so this is harmless on Android/desktop too. */
+    .cin-tabbar {
+        padding-bottom: max(env(safe-area-inset-bottom), 0px);
+    }
+
+    .cin-tabbar-spacer {
+        height: calc(4rem + max(env(safe-area-inset-bottom), 0px));
+    }
+
+    /* Keeps a panel scrollable (overflow-y stays auto/scroll on the element) without showing the
+       scrollbar track/thumb itself — used by SearchSuggestionsDropdown so the results card reads
+       as a clean floating panel rather than looking like a boxed-in scroll widget. */
+    .no-scrollbar {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Cuts the scalloped notch the floating cart button sits in (Shopee/Temu/Jumia-style bottom
+       nav) — a radial-gradient CSS mask rather than an SVG shape, since a mask's circle radius is a
+       fixed pixel value regardless of how wide the bar element itself is, so it never stretches
+       into an oval on a wider phone the way a scaled SVG viewBox would. The circle is centered on
+       the bar's own top edge (`at 50% 0%`), so only its bottom half actually bites into the bar. */
+    .cin-tabbar-notch {
+        -webkit-mask-image: radial-gradient(circle 34px at 50% 0%, transparent 97%, #000 100%);
+        mask-image: radial-gradient(circle 34px at 50% 0%, transparent 97%, #000 100%);
+    }
+
+    /* Taobao-style entry / promo image cards around the hero slideshow */
+    .business-entry-item-card {
+        background-color: rgb(247, 247, 247);
+        background-position: 50%;
+        background-repeat: no-repeat;
+        background-size: cover;
+        border-radius: 12px;
+        font-size: 0;
+        height: 120px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .business-entry-panel {
+        background-color: rgb(247, 247, 247);
+        border-radius: 12px;
+    }
+
+    @keyframes cin-flash {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.35; transform: scale(1.12); }
+    }
+
+    .cin-flash-icon {
+        animation: cin-flash 1.1s ease-in-out infinite;
+    }
+
+    /* Welcome modal: SVG "draw-in" checkmark */
+    @keyframes cin-checkmark-circle {
+        from { stroke-dashoffset: 166; }
+        to { stroke-dashoffset: 0; }
+    }
+
+    @keyframes cin-checkmark-tick {
+        from { stroke-dashoffset: 48; }
+        to { stroke-dashoffset: 0; }
+    }
+
+    @keyframes cin-checkmark-pop {
+        0% { transform: scale(0.8); opacity: 0; }
+        60% { transform: scale(1.05); opacity: 1; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+
+    .cin-checkmark-wrap {
+        animation: cin-checkmark-pop 0.4s ease-out both;
+    }
+
+    .cin-checkmark-circle {
+        stroke-dasharray: 166;
+        stroke-dashoffset: 166;
+        animation: cin-checkmark-circle 0.6s ease-out 0.1s forwards;
+    }
+
+    .cin-checkmark-tick {
+        stroke-dasharray: 48;
+        stroke-dashoffset: 48;
+        animation: cin-checkmark-tick 0.35s ease-out 0.65s forwards;
+    }
+
+    /* Welcome modal: blinking/pulsing "Start Shopping" CTA */
+    @keyframes cin-cta-pulse {
+        0%, 100% {
+            background-color: #16a34a;
+            box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.55);
+        }
+        50% {
+            background-color: #22c55e;
+            box-shadow: 0 0 0 10px rgba(22, 163, 74, 0);
+        }
+    }
+
+    .cin-cta-blink {
+        animation: cin-cta-pulse 1.6s ease-in-out infinite;
+    }
+
+    /* Toast notifications — slide in from top-right, slide out on dismiss */
+    @keyframes cin-toast-in {
+        from {
+            opacity: 0;
+            transform: translateX(1.25rem) translateY(-0.5rem) scale(0.96);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0) translateY(0) scale(1);
+        }
+    }
+
+    @keyframes cin-toast-out {
+        from {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+        }
+        to {
+            opacity: 0;
+            transform: translateX(1.5rem) scale(0.96);
+        }
+    }
+
+    .cin-toast-in {
+        animation: cin-toast-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .cin-toast-out {
+        animation: cin-toast-out 0.3s ease-in both;
+    }
+
+    /* Dual price-range slider thumbs (stacked inputs) */
+    .cin-range-thumb {
+        pointer-events: none;
+    }
+
+    .cin-range-thumb::-webkit-slider-thumb {
+        pointer-events: auto;
+        -webkit-appearance: none;
+        appearance: none;
+        height: 18px;
+        width: 18px;
+        border-radius: 9999px;
+        background: #FF5000;
+        border: 2px solid #fff;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+        margin-top: -1px;
+    }
+
+    .cin-range-thumb::-moz-range-thumb {
+        pointer-events: auto;
+        height: 18px;
+        width: 18px;
+        border-radius: 9999px;
+        background: #FF5000;
+        border: 2px solid #fff;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+    }
+
+    .cin-range-thumb::-webkit-slider-runnable-track {
+        background: transparent;
+        height: 6px;
+    }
+
+    .cin-range-thumb::-moz-range-track {
+        background: transparent;
+        height: 6px;
+    }
+
+    /* Quill's default editable area is quite short (~100px) — product descriptions need more
+       room to write without constantly scrolling. See Components/RichTextEditor.jsx. */
+    .rich-text-editor .ql-container {
+        min-height: 260px;
+    }
+
+    .rich-text-editor .ql-editor {
+        min-height: 260px;
+    }
+}

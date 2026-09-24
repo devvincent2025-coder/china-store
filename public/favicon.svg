@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200">
+  <defs>
+    <polygon id="star" points="0,-7 1.8,-2.4 6.7,-2.2 2.9,0.9 4.1,5.7 0,3 -4.1,5.7 -2.9,0.9 -6.7,-2.2 -1.8,-2.4"/>
+  </defs>
+
+  <!-- gate -->
+  <path d="M20 168 L20 72 Q20 30 62 30 L178 30 Q220 30 220 72 L220 168"
+        fill="none" stroke="#1FA854" stroke-width="14" stroke-linecap="round"/>
+
+  <!-- road -->
+  <rect x="8" y="166" width="224" height="6" rx="3" fill="#E4E4E6"/>
+
+  <!-- motion lines -->
+  <g stroke="#D8D8DA" stroke-width="4" stroke-linecap="round">
+    <line x1="34" y1="108" x2="50" y2="108"/>
+    <line x1="30" y1="122" x2="48" y2="122"/>
+    <line x1="36" y1="136" x2="52" y2="136"/>
+  </g>
+
+  <!-- truck -->
+  <g>
+    <rect x="58" y="96" width="106" height="56" rx="9" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3"/>
+    <rect x="164" y="112" width="38" height="40" rx="7" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3"/>
+    <rect x="172" y="119" width="21" height="17" rx="3" fill="#BEE3F8" stroke="#1A1A1A" stroke-width="2"/>
+    <rect x="58" y="133" width="106" height="12" fill="#FF6A00"/>
+
+    <circle cx="88" cy="153" r="14" fill="#1A1A1A"/>
+    <circle cx="88" cy="153" r="5" fill="#D9D9DC"/>
+    <circle cx="152" cy="153" r="14" fill="#1A1A1A"/>
+    <circle cx="152" cy="153" r="5" fill="#D9D9DC"/>
+
+    <g fill="#FF6A00">
+      <use href="#star" transform="translate(75,116) scale(1.05)"/>
+      <use href="#star" transform="translate(93,116) scale(1.05)"/>
+      <use href="#star" transform="translate(111,116) scale(1.05)"/>
+      <use href="#star" transform="translate(129,116) scale(1.05)"/>
+      <use href="#star" transform="translate(147,116) scale(1.05)"/>
+    </g>
+  </g>
+</svg>

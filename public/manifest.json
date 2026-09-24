@@ -1,0 +1,51 @@
+{
+    "name": "ChinaInNigeria - Shop Chinese-Run Stores in Nigeria",
+    "short_name": "ChinaInNigeria",
+    "description": "Shop quality products from verified Chinese-run vendors across Nigeria. Naira pricing, fast local delivery, buyer protection on every order.",
+    "start_url": "/?source=pwa",
+    "id": "/?source=pwa",
+    "scope": "/",
+    "display": "fullscreen",
+    "display_override": ["fullscreen", "standalone"],
+    "background_color": "#ffffff",
+    "theme_color": "#EA580C",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "/images/pwa/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/images/pwa/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/images/pwa/icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "/images/pwa/icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "My Orders",
+            "url": "/orders",
+            "icons": [{ "src": "/images/pwa/icon-192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "Cart",
+            "url": "/cart",
+            "icons": [{ "src": "/images/pwa/icon-192.png", "sizes": "192x192" }]
+        }
+    ]
+}
