@@ -74,20 +74,3 @@ Or run everything in one go after containers are up:
 ./vendor/bin/sail composer run dev
 That starts the PHP server, queue worker, logs, and Vite together.
 
-
-
-
-Your test credentials (all passwords: password)
-Admin (Filament, /admin)
-admin@chinainnigeria.com
-
-Vendors (all pre-approved and active)
-
-chenwei.vendor@example.com — Golden Dragon Electronics
-amakaobi.vendor@example.com — Sunrise Fashion House
-lina.vendor@example.com — Jade Beauty Emporium
-ibrahimmusa.vendor@example.com — Home Comfort Traders
-Buyers
-ada.buyer@example.com, tunde.buyer@example.com, ngozi.buyer@example.com, femi.buyer@example.com
-
-App is running at http://localhost:8080. Try logging in as chenwei.vendor@example.com and going to Vendor → Products → edit "Wireless Bluetooth Earbuds" to see the packaging/color options already seeded on it.

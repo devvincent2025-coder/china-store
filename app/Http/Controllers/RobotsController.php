@@ -19,6 +19,9 @@ class RobotsController extends Controller
             '/orders', '/profile', '/notifications', '/account', '/support',
             '/favourites', '/track-order', '/verify-email', '/confirm-password',
             '/admin-impersonate',
+            // Ad-tracking redirects, tokenised invoice pages, and JSON-only search endpoints — none
+            // are landing pages, and crawling /go/ would also inflate campaign click counts.
+            '/go/', '/invoices/', '/search/',
         ];
 
         $lines = ['User-agent: *'];

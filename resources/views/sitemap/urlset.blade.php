@@ -13,11 +13,11 @@
         @foreach(($url['alternates'] ?? []) as $hreflang => $altUrl)
         <xhtml:link rel="alternate" hreflang="{{ $hreflang }}" href="{{ $altUrl }}" />
         @endforeach
-        @if(! empty($url['image']))
+        @foreach(($url['images'] ?? []) as $image)
         <image:image>
-            <image:loc>{{ $url['image'] }}</image:loc>
+            <image:loc>{{ $image }}</image:loc>
         </image:image>
-        @endif
+        @endforeach
     </url>
     @endforeach
 </urlset>
