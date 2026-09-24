@@ -128,6 +128,9 @@ class SitemapTest extends TestCase
         $this->get('/robots.txt')
             ->assertOk()
             ->assertSee('Sitemap: '.route('sitemap.index'), false)
-            ->assertSee('Disallow: /go/', false);
+            ->assertSee('Disallow: /go/', false)
+            // A bare "/vendor" prefix would also block the public /vendor-protection page.
+            ->assertSee("Disallow: /vendor/\n", false)
+            ->assertDontSee("Disallow: /vendor\n", false);
     }
 }

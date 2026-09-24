@@ -14,7 +14,7 @@ class RobotsController extends Controller
     public function __invoke(): Response
     {
         $disallow = [
-            '/cart', '/checkout', '/admin', '/vendor', '/login', '/register',
+            '/cart', '/checkout', '/admin', '/vendor/', '/login', '/register',
             '/forgot-password', '/reset-password', '/two-factor-challenge',
             '/orders', '/profile', '/notifications', '/account', '/support',
             '/favourites', '/track-order', '/verify-email', '/confirm-password',
