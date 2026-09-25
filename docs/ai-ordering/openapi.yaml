@@ -1,0 +1,133 @@
+openapi: 3.1.0
+info:
+  title: ChinaInNigeria Agent Ordering API
+  version: "1.0"
+  description: >
+    A buyer-scoped ordering API for AI tools (ChatGPT Custom GPT Actions, Gemini extensions, etc).
+    Auth is OAuth2 (Authorization Code + PKCE) via Laravel Passport — the buyer logs in and
+    approves access on ChinaInNigeria's own consent screen; no token is ever pasted into the AI
+    tool by hand. Checkout never charges a card directly — it returns a Korapay checkout_url the
+    buyer must open and complete manually.
+servers:
+  - url: https://chinainnigeria.com/api/v1
+security:
+  - oauth2: []
+paths:
+  /products:
+    get:
+      operationId: searchProducts
+      summary: Search the product catalog.
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: category
+          schema: { type: integer }
+        - in: query
+          name: max_price
+          schema: { type: number }
+        - in: query
+          name: in_stock
+          schema: { type: boolean }
+      responses:
+        "200": { description: Matching products. }
+  /products/{slug}:
+    get:
+      operationId: getProduct
+      summary: Get one product's full detail, including variants.
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Product detail. }
+  /cart:
+    get:
+      operationId: viewCart
+      summary: View the buyer's current cart.
+      responses:
+        "200": { description: Cart contents. }
+  /cart/items:
+    post:
+      operationId: addToCart
+      summary: Add a product (or variant) to the buyer's cart.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [product_id, quantity]
+              properties:
+                product_id: { type: integer }
+                product_variant_id: { type: integer }
+                quantity: { type: integer, minimum: 1 }
+      responses:
+        "201": { description: Updated cart. }
+  /cart/items/{id}:
+    delete:
+      operationId: removeCartItem
+      summary: Remove a line from the buyer's cart.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { description: Updated cart. }
+  /checkout:
+    post:
+      operationId: checkout
+      summary: >
+        Create an order from the buyer's cart and get a Korapay payment link. This does not charge
+        the buyer; the returned checkout_url must be opened by the buyer to actually pay.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                address_id:
+                  type: integer
+                  description: Use a previously saved shipping address instead of shipping_address below.
+                shipping_address:
+                  type: object
+                  properties:
+                    name: { type: string }
+                    phone: { type: string }
+                    line1: { type: string }
+                    city: { type: string }
+                    state: { type: string }
+      responses:
+        "201": { description: Order created; includes checkout_url. }
+  /orders:
+    get:
+      operationId: listOrders
+      summary: List the buyer's recent orders.
+      responses:
+        "200": { description: Orders. }
+  /orders/{order_number}:
+    get:
+      operationId: getOrder
+      summary: Get one order's status and contents.
+      parameters:
+        - in: path
+          name: order_number
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Order detail. }
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://chinainnigeria.com/oauth/authorize
+          tokenUrl: https://chinainnigeria.com/oauth/token
+          scopes:
+            orders:place: Search products, manage your cart, and place orders on your behalf
+            orders:read: View your past and current orders

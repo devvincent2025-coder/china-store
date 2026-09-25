@@ -3,7 +3,9 @@
  * calculateShippingFee() in JS — used ONLY to give a vendor a live "Estimated Earnings" preview
  * while editing a product (see Components/EstimatedEarnings.jsx). The real charge always happens
  * server-side (CheckoutService), so this never needs to be authoritative, only accurate enough to
- * match what checkout will actually compute.
+ * match what checkout will actually compute. VAT is the single platform-wide rate an admin sets
+ * (App\Models\Setting::vatRate()), passed in explicitly — it is NOT read off the vendor object,
+ * since a vendor can no longer set their own.
  */
 
 // Same basis-point integer math as the PHP side, so a rate like 7.5% never drifts from rounding.
@@ -46,12 +48,13 @@ export function shippingFeeFor(afterDiscountKobo, vendor) {
 /**
  * @param {number} priceKobo unit price
  * @param {number} quantity
- * @param {object} vendor { commission_rate, vat_rate, shipping_fee_type, shipping_fee_fixed_amount, shipping_fee_percentage }
+ * @param {object} vendor { commission_rate, shipping_fee_type, shipping_fee_fixed_amount, shipping_fee_percentage }
  * @param {array} commissionTiers
+ * @param {number} vatRatePercent the platform-wide VAT rate (%), from Setting::vatRate()
  */
-export function estimateEarnings(priceKobo, quantity, vendor, commissionTiers) {
+export function estimateEarnings(priceKobo, quantity, vendor, commissionTiers, vatRatePercent) {
     const subtotal = Math.max(0, priceKobo) * Math.max(0, quantity);
-    const vatAmount = applyPercentage(subtotal, vendor?.vat_rate);
+    const vatAmount = applyPercentage(subtotal, vatRatePercent);
     const shippingAmount = shippingFeeFor(subtotal, vendor);
     const total = subtotal + vatAmount + shippingAmount;
     const { rate: commissionRate, source } = commissionRateFor(subtotal, commissionTiers, vendor?.commission_rate);

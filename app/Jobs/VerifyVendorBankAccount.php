@@ -19,6 +19,7 @@ use Illuminate\Support\Str;
  * code against Korapay with zero human review. Dispatched right after the vendor submits their
  * bank details form.
  */
+// Pinned to the "database" queue connection in the constructor below (not QUEUE_CONNECTION's default) — this calls an external API and shouldn't block the request that triggers it, even on a shared host that sets QUEUE_CONNECTION=sync so NOTIFICATIONS send instantly instead (see .env.example). Still needs something processing the "database" queue: a real `queue:work` daemon, or the cron-driven Schedule::command('queue:work --stop-when-empty') in routes/console.php.
 class VerifyVendorBankAccount implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -27,6 +28,7 @@ class VerifyVendorBankAccount implements ShouldQueue
 
     public function __construct(private readonly Vendor $vendor)
     {
+        $this->onConnection('database');
     }
 
     public function handle(KorapayService $korapay, VendorOnboardingService $onboarding): void

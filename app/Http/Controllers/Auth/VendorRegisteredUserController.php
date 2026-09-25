@@ -55,10 +55,11 @@ class VendorRegisteredUserController extends Controller
             'business_name' => $validated['business_name'],
             'contact_email' => $validated['email'],
             'contact_phone' => $validated['phone'],
-            // Platform-wide defaults an admin controls from Filament\Pages\Settings — falls back to
-            // the vendors table's own DB column defaults (10%, 0%) if never explicitly set.
+            // Admin-controlled default from Filament\Pages\Settings — falls back to the vendors
+            // table's own DB column default (10%) if never explicitly set. VAT is NOT set here at
+            // all any more — it's a single platform-wide rate (App\Models\Setting::vatRate()),
+            // not something copied onto each vendor at signup.
             'commission_rate' => Setting::get('default_commission_rate', 10.00),
-            'vat_rate' => Setting::get('default_vat_rate', 0.00),
         ]);
 
         event(new Registered($user));

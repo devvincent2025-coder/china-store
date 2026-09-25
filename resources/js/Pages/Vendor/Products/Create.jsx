@@ -266,7 +266,7 @@ function StagedOptions({ options, onChange, errors }) {
     );
 }
 
-export default function Create({ categories, vendor, commissionTiers = [] }) {
+export default function Create({ categories, vendor, commissionTiers = [], vatRatePercent = 7.5 }) {
     const { __ } = useTranslation();
     const { data, setData, post, processing, errors } = useForm({
         title: { zh: '', en: '', fr: '' },
@@ -314,7 +314,7 @@ export default function Create({ categories, vendor, commissionTiers = [] }) {
                     />
                 </div>
 
-                <EstimatedEarnings price={data.price} stock={data.stock} vendor={vendor} commissionTiers={commissionTiers} />
+                <EstimatedEarnings price={data.price} stock={data.stock} vendor={vendor} commissionTiers={commissionTiers} vatRatePercent={vatRatePercent} />
 
                 <button
                     type="submit"

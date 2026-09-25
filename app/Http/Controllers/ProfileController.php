@@ -8,9 +8,11 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
+use Laravel\Passport\Token;
 
 class ProfileController extends Controller
 {
@@ -39,7 +41,42 @@ class ProfileController extends Controller
                 // (re)generated — never persisted into a normal page prop.
                 'recoveryCodes' => session('recovery_codes'),
             ],
+            // AI tools (Claude, a ChatGPT Custom GPT, ...) this buyer approved via the OAuth
+            // consent screen at GET /oauth/authorize — see resources/views/oauth/authorize.blade.php
+            // and routes/api.php. Grouped by client, one row per distinct app rather than per
+            // token, since re-approving the same app issues a new token without revoking the old.
+            'connectedApps' => $user->tokens()
+                ->with('client')
+                ->where('revoked', false)
+                ->where('expires_at', '>', Date::now())
+                ->get()
+                ->groupBy('client_id')
+                ->map(fn ($tokens) => [
+                    'id' => $tokens->first()->id,
+                    'client_name' => $tokens->first()->client->name,
+                    'scopes' => $tokens->pluck('scopes')->flatten()->unique()->values()->all(),
+                ])
+                ->values(),
         ]);
+    }
+
+    /**
+     * Revokes every token this buyer has issued to one connected app's OAuth client — not just the
+     * single token row the "Disconnect" button happened to be rendered for, since re-approving the
+     * same app (see edit() above) can leave more than one live token behind for it.
+     */
+    public function destroyConnectedApp(Request $request, Token $token): RedirectResponse
+    {
+        abort_unless($token->user_id === $request->user()->id, 404);
+
+        $request->user()->tokens()
+            ->where('client_id', $token->client_id)
+            ->each(function (Token $token) {
+                $token->revoke();
+                $token->refreshToken?->revoke();
+            });
+
+        return back()->with('success', 'App disconnected.');
     }
 
     /**

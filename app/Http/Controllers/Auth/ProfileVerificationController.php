@@ -35,7 +35,14 @@ class ProfileVerificationController extends Controller
             'phone' => ['required', 'string', 'max:30', Rule::unique(User::class, 'phone')->ignore($user->id)],
         ]);
 
-        $this->signup->updateProfileAndSendPhoneOtp($user, $validated['name'], $validated['phone']);
+        $autoVerified = $this->signup->updateProfileAndSendPhoneOtp($user, $validated['name'], $validated['phone']);
+
+        // config('services.smart_sms.phone_otp_required') is off — the phone was accepted and
+        // marked verified immediately, with no code sent, so there's no OTP step for
+        // CompleteProfileModal.jsx to show at all. Finish signup right here instead.
+        if ($autoVerified) {
+            return $this->finishSignup($user);
+        }
 
         return back()->with('success', 'A verification code was sent to your phone.');
     }
@@ -63,6 +70,16 @@ class ProfileVerificationController extends Controller
 
         $this->signup->verifyPhoneOtp($user, $validated['code']);
 
+        return $this->finishSignup($user);
+    }
+
+    /**
+     * Fires the welcome email/notification and sends the buyer home to see WelcomeModal.jsx —
+     * shared by the normal "code verified" path above and the phone_otp_required=false bypass in
+     * store(), which skips the code step entirely but still needs to end up in the same place.
+     */
+    private function finishSignup(User $user): RedirectResponse
+    {
         $user->notify(new WelcomeNotification);
 
         // The storefront home page reads this flash value once to trigger the welcome modal — see

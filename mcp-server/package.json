@@ -1,0 +1,18 @@
+{
+  "name": "chinainnigeria-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server that lets AI tools (Claude, etc.) search products, manage a cart, and start checkout on ChinaInNigeria on a buyer's behalf.",
+  "type": "module",
+  "bin": {
+    "chinainnigeria-mcp-server": "src/index.js"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "start:remote": "node src/http-server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.9.0",
+    "express": "^4.22.3",
+    "zod": "^3.23.8"
+  }
+}

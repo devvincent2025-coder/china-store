@@ -118,9 +118,11 @@ class CheckoutService
                 $vendor = $items->first()->vendor;
                 $afterDiscount = $subtotal - $discount;
 
-                // VAT and shipping are the vendor's own configuration (see Vendor::calculateVat()/
-                // calculateShippingFee()) and are paid out to them in full — the platform's
-                // commission below is charged only on goods revenue, never on tax or shipping.
+                // VAT is a single platform-wide rate (App\Models\Setting::vatRate(), see
+                // Vendor::calculateVat()) — every vendor charges the same rate. Shipping is still
+                // the vendor's own configuration (Vendor::calculateShippingFee()). Both are paid
+                // out to the vendor in full — the platform's commission below is charged only on
+                // goods revenue, never on tax or shipping.
                 $vatAmount = $vendor->calculateVat($afterDiscount);
                 $shippingAmount = $vendor->calculateShippingFee($afterDiscount);
                 $total = $afterDiscount + $vatAmount + $shippingAmount;

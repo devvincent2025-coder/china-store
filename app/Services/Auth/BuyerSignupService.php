@@ -141,8 +141,26 @@ class BuyerSignupService
         return $user;
     }
 
-    public function updateProfileAndSendPhoneOtp(User $user, string $name, string $phone): void
+    /**
+     * @return bool true if the phone was verified immediately with no code sent at all (see
+     *   config('services.smart_sms.phone_otp_required')) — the caller (ProfileVerificationController)
+     *   uses this to skip straight to "signup complete" instead of showing a code-entry step.
+     */
+    public function updateProfileAndSendPhoneOtp(User $user, string $name, string $phone): bool
     {
+        if (! config('services.smart_sms.phone_otp_required')) {
+            $user->update([
+                'name' => $name,
+                'phone' => $phone,
+                'phone_verified_at' => now(),
+                'requires_phone_verification' => false,
+                'otp_hash' => null,
+                'otp_expires_at' => null,
+            ]);
+
+            return true;
+        }
+
         $this->assertCooldownElapsed($user->otp_last_sent_at?->toIso8601String());
 
         $code = $this->generateCode();
@@ -175,6 +193,8 @@ class BuyerSignupService
 
         RateLimiter::clear('signup-phone-otp:'.$user->id);
         OtpLogger::record('buyer_signup_phone', $phone, $code);
+
+        return false;
     }
 
     public function resendPhoneOtp(User $user): void

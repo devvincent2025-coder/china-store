@@ -63,6 +63,14 @@ return [
         'username' => env('SMARTSMS_USERNAME'),
         'password' => env('SMARTSMS_PASSWORD'),
         'sender_id' => env('SMARTSMS_SENDER_ID', 'ChinaInNG'),
+
+        // Without a live gateway account, SmsService::send() silently no-ops (see its own doc
+        // comment) rather than throwing — meaning in production a buyer/vendor who reaches a phone
+        // OTP step never actually receives a code and is stuck there permanently, with no way
+        // forward. Setting this to false skips the OTP entirely: a phone number is accepted and
+        // marked verified immediately, no code sent or asked for — see BuyerSignupService and
+        // VendorIdentityService. Flip back to true once a real SMS gateway is configured.
+        'phone_otp_required' => (bool) env('PHONE_OTP_REQUIRED', true),
     ],
 
     'supabase' => [

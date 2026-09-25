@@ -6,13 +6,14 @@ import TwoFactorAuthenticationForm from './Partials/TwoFactorAuthenticationForm'
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
 import DefaultAddressForm from './Partials/DefaultAddressForm';
+import ConnectedAppsPanel from './Partials/ConnectedAppsPanel';
 import { useTranslation } from '@/hooks/useTranslation';
 
 function Card({ children }) {
     return <div className="rounded-lg border border-neutral-200 bg-white p-5 sm:p-6">{children}</div>;
 }
 
-export default function Edit({ mustVerifyEmail, status, twoFactor, defaultShippingAddress }) {
+export default function Edit({ mustVerifyEmail, status, twoFactor, defaultShippingAddress, connectedApps }) {
     const { __ } = useTranslation();
     const { auth } = usePage().props;
     const user = auth?.user;
@@ -51,6 +52,10 @@ export default function Edit({ mustVerifyEmail, status, twoFactor, defaultShippi
                                 {__('Manage')}
                             </Link>
                         </div>
+                    </Card>
+
+                    <Card>
+                        <ConnectedAppsPanel connectedApps={connectedApps} />
                     </Card>
 
                     <Card>

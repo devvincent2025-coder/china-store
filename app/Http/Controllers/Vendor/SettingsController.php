@@ -3,16 +3,17 @@
 namespace App\Http\Controllers\Vendor;
 
 use App\Http\Controllers\Controller;
+use App\Models\Setting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Lets a vendor configure the two things that affect their own checkout math: the VAT rate they
- * charge (0-20%, their own tax obligation to remit — the platform never touches it) and their
- * shipping fee (flat, a percentage of the order, or both) — see Vendor::calculateVat() /
- * calculateShippingFee() and App\Services\Checkout\CheckoutService for where these are applied.
+ * Lets a vendor configure their own shipping fee (flat, a percentage of the order, or both) — see
+ * Vendor::calculateShippingFee() and App\Services\Checkout\CheckoutService for where this is
+ * applied. VAT is deliberately NOT here: it's a single platform-wide rate an admin sets from
+ * Filament\Pages\Settings (App\Models\Setting::vatRate()), the same for every vendor.
  */
 class SettingsController extends Controller
 {
@@ -20,20 +21,21 @@ class SettingsController extends Controller
     {
         return Inertia::render('Vendor/Settings', [
             'vendor' => $request->user()->vendor,
+            // Read-only display only — see the class doc comment above for why this isn't
+            // editable here.
+            'vatRatePercent' => Setting::vatRate(),
         ]);
     }
 
     public function update(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'vat_rate' => ['required', 'numeric', 'min:0', 'max:20'],
             'shipping_fee_type' => ['required', 'in:fixed,percentage,both'],
             'shipping_fee_fixed_amount' => ['required_if:shipping_fee_type,fixed,both', 'nullable', 'numeric', 'min:0'],
             'shipping_fee_percentage' => ['required_if:shipping_fee_type,percentage,both', 'nullable', 'numeric', 'min:0', 'max:100'],
         ]);
 
         $request->user()->vendor->update([
-            'vat_rate' => $validated['vat_rate'],
             'shipping_fee_type' => $validated['shipping_fee_type'],
             'shipping_fee_fixed_amount' => (int) round(($validated['shipping_fee_fixed_amount'] ?? 0) * 100),
             'shipping_fee_percentage' => $validated['shipping_fee_percentage'] ?? 0,

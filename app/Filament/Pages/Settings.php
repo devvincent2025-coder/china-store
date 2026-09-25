@@ -50,7 +50,7 @@ class Settings extends Page implements HasForms
 
         $this->form->fill([
             'default_commission_rate' => Setting::get('default_commission_rate', '10.00'),
-            'default_vat_rate' => Setting::get('default_vat_rate', '0.00'),
+            'default_vat_rate' => Setting::get('default_vat_rate', '7.50'),
             'escrow_return_window_days' => Setting::get('escrow_return_window_days', (string) config('services.escrow.return_window_days')),
             'support_email' => Setting::get('support_email', 'support@chinainnigeria.com'),
             'commission_tiers' => collect($tiers)->map(fn ($tier) => [
@@ -83,7 +83,8 @@ class Settings extends Page implements HasForms
                             ->minValue(0)
                             ->maxValue(100),
                         TextInput::make('default_vat_rate')
-                            ->label('Default VAT rate (%)')
+                            ->label('VAT rate (%)')
+                            ->helperText('Applied to every order platform-wide — vendors can no longer set their own.')
                             ->numeric()
                             ->required()
                             ->minValue(0)

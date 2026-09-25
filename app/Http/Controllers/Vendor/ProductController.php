@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Vendor;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Setting;
 use App\Services\Commission\CommissionService;
 use App\Services\Product\ProductImageIngestionService;
 use App\Services\Product\ProductOptionSyncService;
@@ -70,6 +71,7 @@ class ProductController extends Controller
             // Lets the "Estimated Earnings" panel mirror CommissionService::rateFor() client-side
             // without a round trip per keystroke — see resources/js/utils/commission.js.
             'commissionTiers' => CommissionService::tiers(),
+            'vatRatePercent' => Setting::vatRate(),
         ]);
     }
 
@@ -138,6 +140,7 @@ class ProductController extends Controller
             'categories' => Category::where('is_active', true)->get(),
             'vendor' => $request->user()->vendor,
             'commissionTiers' => CommissionService::tiers(),
+            'vatRatePercent' => Setting::vatRate(),
         ]);
     }
 

@@ -30,11 +30,18 @@ use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\TrackOrderController;
 use App\Http\Controllers\VendorReportController;
 use App\Http\Controllers\VendorStoreController;
+use App\Http\Controllers\OAuthDiscoveryController;
 use App\Http\Controllers\Webhooks\KorapayWebhookController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', HomeController::class)->name('home');
+
+// RFC 8414 / RFC 9728 discovery for the AI-ordering OAuth server (see docs/ai-ordering/) — lets a
+// spec-aware client (Claude's remote MCP connector) auto-configure itself instead of a human
+// copying the /oauth/authorize and /oauth/token URLs in by hand.
+Route::get('/.well-known/oauth-authorization-server', [OAuthDiscoveryController::class, 'authorizationServer']);
+Route::get('/.well-known/oauth-protected-resource', [OAuthDiscoveryController::class, 'protectedResource']);
 
 // SEO infrastructure — see App\Support\Seo\Seo's class doc comment for the overall approach.
 Route::get('/robots.txt', RobotsController::class)->name('robots');
@@ -182,6 +189,7 @@ Route::middleware(['auth', 'buyer.signup-complete'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::patch('/profile/default-address', [ProfileController::class, 'updateDefaultAddress'])->name('profile.default-address.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::delete('/profile/connected-apps/{token}', [ProfileController::class, 'destroyConnectedApp'])->name('profile.connected-apps.destroy');
 
     // Linked from every email footer — see resources/views/vendor/mail/html/footer.blade.php.
     Route::get('/account/email-preferences', [EmailPreferenceController::class, 'edit'])->name('email-preferences.edit');

@@ -627,7 +627,7 @@ function tiersFromServer(priceTiers) {
     }));
 }
 
-export default function Edit({ product, categories, vendor, commissionTiers = [] }) {
+export default function Edit({ product, categories, vendor, commissionTiers = [], vatRatePercent = 7.5 }) {
     const { __ } = useTranslation();
     const hasVariants = (product.variants?.length ?? 0) > 0;
     const { data, setData, patch, processing, errors } = useForm({
@@ -673,7 +673,7 @@ export default function Edit({ product, categories, vendor, commissionTiers = []
                         </div>
                     )}
 
-                    <EstimatedEarnings price={data.price} stock={data.stock} vendor={vendor} commissionTiers={commissionTiers} />
+                    <EstimatedEarnings price={data.price} stock={data.stock} vendor={vendor} commissionTiers={commissionTiers} vatRatePercent={vatRatePercent} />
 
                     <button
                         type="submit"

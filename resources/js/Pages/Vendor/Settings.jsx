@@ -6,7 +6,7 @@ import TextInput from '@/Components/TextInput';
 import { formatNaira, koboToNaira, nairaToKobo } from '@/utils/money';
 import { useTranslation } from '@/hooks/useTranslation';
 
-export default function Settings({ vendor }) {
+export default function Settings({ vendor, vatRatePercent = 7.5 }) {
     const { __ } = useTranslation();
 
     const SHIPPING_FEE_TYPES = [
@@ -16,7 +16,6 @@ export default function Settings({ vendor }) {
     ];
 
     const { data, setData, patch, processing, errors } = useForm({
-        vat_rate: vendor.vat_rate ?? '0',
         shipping_fee_type: vendor.shipping_fee_type ?? 'fixed',
         shipping_fee_fixed_amount: koboToNaira(vendor.shipping_fee_fixed_amount ?? 0),
         shipping_fee_percentage: vendor.shipping_fee_percentage ?? '0',
@@ -64,26 +63,12 @@ export default function Settings({ vendor }) {
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
             <form onSubmit={submit} className="space-y-6">
-                {/* VAT */}
+                {/* VAT — no longer vendor-editable; the platform charges one rate for everyone. */}
                 <div className="rounded-lg border border-neutral-200 bg-white p-5">
                     <h2 className="mb-1 text-sm font-semibold text-neutral-800">{__('VAT Rate')}</h2>
-                    <p className="mb-4 text-xs text-neutral-500">
-                        {__("The VAT you collect on your sales is yours to remit — the platform doesn't take any cut of it, it's just passed on to buyers at checkout.")}
+                    <p className="text-xs text-neutral-500">
+                        {__('The platform applies a single VAT rate of :rate% to every order — this is no longer something you set yourself.', { rate: vatRatePercent })}
                     </p>
-                    <div className="max-w-xs">
-                        <InputLabel htmlFor="vat_rate" value={__('VAT Rate (%)')} />
-                        <TextInput
-                            id="vat_rate"
-                            type="number"
-                            min="0"
-                            max="20"
-                            step="0.5"
-                            className="mt-1 block w-full"
-                            value={data.vat_rate}
-                            onChange={(e) => setData('vat_rate', e.target.value)}
-                        />
-                        <InputError message={errors.vat_rate} className="mt-1" />
-                    </div>
                 </div>
 
                 {/* Shipping fees */}

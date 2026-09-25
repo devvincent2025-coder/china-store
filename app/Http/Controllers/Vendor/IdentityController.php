@@ -21,9 +21,11 @@ class IdentityController extends Controller
 
     public function sendPhoneOtp(Request $request): RedirectResponse
     {
-        $this->identity->sendPhoneOtp($request->user()->vendor);
+        $autoVerified = $this->identity->sendPhoneOtp($request->user()->vendor);
 
-        return back()->with('success', 'A verification code was sent to your phone.');
+        return back()->with('success', $autoVerified
+            ? 'Phone number verified.'
+            : 'A verification code was sent to your phone.');
     }
 
     public function verifyPhoneOtp(Request $request): RedirectResponse

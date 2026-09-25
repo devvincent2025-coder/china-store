@@ -12,13 +12,20 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Passport\Contracts\OAuthenticatable;
+use Laravel\Passport\HasApiTokens;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements FilamentUser, MustVerifyEmail
+/**
+ * Implements OAuthenticatable (Passport's HasApiTokens trait requires it) so a buyer can go
+ * through a real OAuth2 login/consent screen with an AI tool (see routes/oauth.php doc comment
+ * and docs/ai-ordering/) instead of ever pasting a token into it.
+ */
+class User extends Authenticatable implements FilamentUser, MustVerifyEmail, OAuthenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasRoles, Notifiable, HasPushSubscriptions, MustVerifyEmailTrait;
+    use HasFactory, HasApiTokens, HasRoles, Notifiable, HasPushSubscriptions, MustVerifyEmailTrait;
 
     protected $fillable = [
         'name',

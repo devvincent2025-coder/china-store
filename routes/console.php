@@ -28,3 +28,15 @@ Schedule::command('notifications:new-stores')->daily();
 
 // Sitemap export + live cache refresh — see App\Console\Commands\ExportSitemap.
 Schedule::command('sitemap:export --gzip')->dailyAt('02:30');
+
+// Shared hosting has no Supervisor/systemd to keep `queue:work` running as a persistent daemon —
+// every queued notification (order confirmations, vendor approvals, escrow/dispute emails, ...)
+// would otherwise just sit in the `jobs` table until someone happens to SSH in and run it by hand.
+// This piggybacks on the SAME cron-triggered `schedule:run` that already drives every command
+// above: each minute it drains whatever's currently queued and exits — `--stop-when-empty` means
+// it never lingers as a long-running process (which a shared host's process limits would kill
+// anyway), and `withoutOverlapping()` skips a run if the previous minute's is still mid-flight
+// (e.g. a slow SMTP send) rather than starting a second worker on top of it.
+Schedule::command('queue:work --stop-when-empty --max-time=50 --tries=3')
+    ->everyMinute()
+    ->withoutOverlapping();

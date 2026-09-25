@@ -45,8 +45,24 @@ class VendorIdentityService
     ) {
     }
 
-    public function sendPhoneOtp(Vendor $vendor): void
+    /**
+     * @return bool true if the phone was verified immediately with no code sent at all (see
+     *   config('services.smart_sms.phone_otp_required')) — the caller (IdentityController) uses
+     *   this to flash the right message, since KycModal.jsx's code-entry form disappears on its
+     *   own once vendor.phone_verified_at is set (no other frontend change needed).
+     */
+    public function sendPhoneOtp(Vendor $vendor): bool
     {
+        if (! config('services.smart_sms.phone_otp_required')) {
+            $vendor->update([
+                'phone_verified_at' => now(),
+                'phone_otp_hash' => null,
+                'phone_otp_expires_at' => null,
+            ]);
+
+            return true;
+        }
+
         // Previously unthrottled entirely — a vendor (or anyone driving their session) could spam
         // this endpoint and burn SMS credits with no limit at all. A 60-second cooldown per vendor
         // matches the buyer-signup phone OTP's own resend spacing (see BuyerSignupService).
@@ -92,6 +108,8 @@ class VendorIdentityService
             'phone_otp_hash' => Hash::make($code),
             'phone_otp_expires_at' => now()->addMinutes(self::OTP_TTL_MINUTES),
         ]);
+
+        return false;
     }
 
     public function verifyPhoneOtp(Vendor $vendor, string $code): void

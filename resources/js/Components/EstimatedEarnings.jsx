@@ -9,7 +9,7 @@ import { useTranslation } from '@/hooks/useTranslation';
  * commission on goods revenue, the vendor's own VAT and shipping configuration added on top),
  * so what a vendor sees here matches what an order breakdown will later show.
  */
-export default function EstimatedEarnings({ price, stock, vendor, commissionTiers = [] }) {
+export default function EstimatedEarnings({ price, stock, vendor, commissionTiers = [], vatRatePercent = 7.5 }) {
     const { __ } = useTranslation();
     const [quantity, setQuantity] = useState('');
 
@@ -17,8 +17,8 @@ export default function EstimatedEarnings({ price, stock, vendor, commissionTier
     const priceKobo = nairaToKobo(price);
 
     const estimate = useMemo(
-        () => estimateEarnings(priceKobo, effectiveQuantity, vendor, commissionTiers),
-        [priceKobo, effectiveQuantity, vendor, commissionTiers],
+        () => estimateEarnings(priceKobo, effectiveQuantity, vendor, commissionTiers, vatRatePercent),
+        [priceKobo, effectiveQuantity, vendor, commissionTiers, vatRatePercent],
     );
 
     if (!vendor || !price || Number(price) <= 0) {
@@ -54,7 +54,7 @@ export default function EstimatedEarnings({ price, stock, vendor, commissionTier
                 </div>
                 {estimate.vatAmount > 0 && (
                     <div className="flex justify-between">
-                        <span className="text-neutral-500">{__('VAT')} ({Number(vendor.vat_rate)}%)</span>
+                        <span className="text-neutral-500">{__('VAT')} ({Number(vatRatePercent)}%)</span>
                         <span>+{formatNaira(estimate.vatAmount)}</span>
                     </div>
                 )}

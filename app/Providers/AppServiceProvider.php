@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Passport\Passport;
 use NotificationChannels\WebPush\WebPushChannel;
 
 class AppServiceProvider extends ServiceProvider
@@ -38,5 +39,19 @@ class AppServiceProvider extends ServiceProvider
         // single place that grants a full bypass instead of that role needing every permission
         // listed explicitly (and staying in sync every time a new one is added).
         Gate::before(fn ($user, string $ability) => $user?->hasRole('super_admin', 'web') ? true : null);
+
+        // Powers the buyer-facing AI ordering API (routes/api.php) — a buyer approves one of
+        // these two scopes for an AI tool (Claude, a ChatGPT Custom GPT Action, ...) on the OAuth
+        // consent screen below, never both by default, so "let it look things up" and "let it
+        // spend money on my behalf" stay two separate, revocable decisions.
+        Passport::tokensCan([
+            'orders:place' => 'Search products, manage your cart, and place orders on your behalf',
+            'orders:read' => 'View your past and current orders',
+        ]);
+
+        // The consent screen a buyer sees at GET /oauth/authorize right after logging in — see
+        // resources/views/oauth/authorize.blade.php. Without this, Passport falls back to a view
+        // name ('passport::authorize') this app never publishes, so /oauth/authorize would 500.
+        Passport::authorizationView('oauth.authorize');
     }
 }

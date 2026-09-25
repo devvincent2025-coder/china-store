@@ -54,7 +54,6 @@ class Vendor extends Model
         'phone_otp_hash',
         'phone_otp_expires_at',
         'commission_rate',
-        'vat_rate',
         'shipping_fee_type',
         'shipping_fee_fixed_amount',
         'shipping_fee_percentage',
@@ -100,7 +99,6 @@ class Vendor extends Model
             'phone_verified_at' => 'datetime',
             'phone_otp_expires_at' => 'datetime',
             'commission_rate' => 'decimal:2',
-            'vat_rate' => 'decimal:2',
             'shipping_fee_percentage' => 'decimal:2',
             'vacation_mode' => 'boolean',
             'notify_new_order_email' => 'boolean',
@@ -222,13 +220,15 @@ class Vendor extends Model
     }
 
     /**
-     * VAT this vendor charges on their own goods, applied to the post-discount subtotal. Uses
+     * VAT applied to the post-discount subtotal, at the single platform-wide rate an admin sets in
+     * Filament\Pages\Settings (App\Models\Setting::vatRate()) — NOT something an individual vendor
+     * configures (previously vendors.vat_rate let each vendor pick their own, inconsistently). Uses
      * basis-point integer math (rate × 100) rather than floating point so a rate like 7.50% never
      * drifts by a kobo on rounding — see App\Services\Checkout\CheckoutService for where this is used.
      */
     public function calculateVat(int $amountKobo): int
     {
-        return $this->applyPercentage($amountKobo, (float) $this->vat_rate);
+        return $this->applyPercentage($amountKobo, \App\Models\Setting::vatRate());
     }
 
     /**

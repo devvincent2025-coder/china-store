@@ -56,6 +56,15 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Backs routes/api.php — validates the OAuth2 access tokens Passport issues when a buyer
+        // approves an AI tool (see docs/ai-ordering/). Deliberately separate from 'web'/'admin':
+        // an OAuth token is scoped (see Passport::tokensCan() in AppServiceProvider) and can never
+        // authenticate a browser session or reach anything outside routes/api.php.
+        'api' => [
+            'driver' => 'passport',
+            'provider' => 'users',
+        ],
     ],
 
     /*

@@ -23,7 +23,7 @@ return new class extends Migration
             $table->unsignedBigInteger('original_subtotal')->default(0)->comment('Kobo, pre-discount');
             $table->unsignedBigInteger('subtotal')->comment('Kobo, before this group\'s discount');
             $table->unsignedBigInteger('discount')->default(0)->comment('Coupon discount, kobo');
-            $table->unsignedBigInteger('vat_amount')->default(0)->comment('Kobo, vendor\'s own vat_rate applied to subtotal-discount');
+            $table->unsignedBigInteger('vat_amount')->default(0)->comment('Kobo, platform-wide VAT rate applied to subtotal-discount');
             $table->unsignedBigInteger('shipping_amount')->default(0)->comment('Kobo, per vendor\'s shipping_fee_type/amounts');
             // Full amount the buyer pays for this vendor's portion: (subtotal - discount) + vat + shipping.
             $table->unsignedBigInteger('total')->comment('Kobo, what this vendor is owed before commission');

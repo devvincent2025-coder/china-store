@@ -32,4 +32,14 @@ class Setting extends Model
 
         Cache::forget(self::CACHE_PREFIX.$key);
     }
+
+    /**
+     * The single VAT rate (%) applied to every order platform-wide — admin-configurable from
+     * Filament\Pages\Settings, no longer something an individual vendor can set (see
+     * App\Models\Vendor::calculateVat(), the only caller that matters for real order math).
+     */
+    public static function vatRate(): float
+    {
+        return (float) self::get('default_vat_rate', 7.50);
+    }
 }

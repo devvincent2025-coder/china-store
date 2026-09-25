@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Http;
  * original immediately (ProductImage::getDisplayUrlAttribute() falls back to it) and the storefront
  * picks up the lighter, compressed copy once this finishes.
  */
+// Pinned to the "database" queue connection in the constructor below (not QUEUE_CONNECTION's default) — this calls an external API and shouldn't block the request that triggers it, even on a shared host that sets QUEUE_CONNECTION=sync so NOTIFICATIONS send instantly instead (see .env.example). Still needs something processing the "database" queue: a real `queue:work` daemon, or the cron-driven Schedule::command('queue:work --stop-when-empty') in routes/console.php. Doubly true here — running this synchronously would defeat the entire reason it's a
+// job in the first place (see the class doc comment above).
 class EnhanceProductImage implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -29,6 +31,7 @@ class EnhanceProductImage implements ShouldQueue
 
     public function __construct(private readonly ProductImage $productImage)
     {
+        $this->onConnection('database');
     }
 
     public function handle(SupabaseStorageService $storage, ImageCompressionService $compressor): void

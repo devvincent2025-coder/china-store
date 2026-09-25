@@ -40,7 +40,6 @@ class VendorSeeder extends Seeder
                 'state' => 'Lagos',
                 // Demo values chosen to exercise all three shipping fee modes across the seed
                 // vendors, so the discount/VAT/shipping breakdown is visibly non-zero in local testing.
-                'vat_rate' => 7.50,
                 'shipping_fee_type' => 'both',
                 'shipping_fee_fixed_amount' => 150000, // ₦1,500
                 'shipping_fee_percentage' => 1.50,
@@ -53,7 +52,6 @@ class VendorSeeder extends Seeder
                 'category' => 'Fashion',
                 'city' => 'Lagos',
                 'state' => 'Lagos',
-                'vat_rate' => 0,
                 'shipping_fee_type' => 'fixed',
                 'shipping_fee_fixed_amount' => 200000, // ₦2,000 flat
                 'shipping_fee_percentage' => 0,
@@ -66,7 +64,6 @@ class VendorSeeder extends Seeder
                 'category' => 'Beauty',
                 'city' => 'Abuja',
                 'state' => 'FCT',
-                'vat_rate' => 7.50,
                 'shipping_fee_type' => 'percentage',
                 'shipping_fee_fixed_amount' => 0,
                 'shipping_fee_percentage' => 5.00,
@@ -80,7 +77,6 @@ class VendorSeeder extends Seeder
                 'city' => 'Abuja',
                 'state' => 'FCT',
                 // Free shipping, no VAT — demonstrates a vendor who's configured neither fee.
-                'vat_rate' => 0,
                 'shipping_fee_type' => 'fixed',
                 'shipping_fee_fixed_amount' => 0,
                 'shipping_fee_percentage' => 0,
@@ -124,7 +120,6 @@ class VendorSeeder extends Seeder
                     'korapay_subaccount_id' => 'SUB_'.Str::random(10),
                     'korapay_subaccount_created_at' => now()->subDays(14),
                     'commission_rate' => 10.00,
-                    'vat_rate' => $v['vat_rate'],
                     'shipping_fee_type' => $v['shipping_fee_type'],
                     'shipping_fee_fixed_amount' => $v['shipping_fee_fixed_amount'],
                     'shipping_fee_percentage' => $v['shipping_fee_percentage'],

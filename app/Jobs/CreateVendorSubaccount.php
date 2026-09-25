@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Log;
  * verified, register the vendor as a Korapay split payment destination so future orders can route
  * funds to them without any manual dashboard work.
  */
+// Pinned to the "database" queue connection in the constructor below (not QUEUE_CONNECTION's default) — this calls an external API and shouldn't block the request that triggers it, even on a shared host that sets QUEUE_CONNECTION=sync so NOTIFICATIONS send instantly instead (see .env.example). Still needs something processing the "database" queue: a real `queue:work` daemon, or the cron-driven Schedule::command('queue:work --stop-when-empty') in routes/console.php.
 class CreateVendorSubaccount implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -26,6 +27,7 @@ class CreateVendorSubaccount implements ShouldQueue
 
     public function __construct(private readonly Vendor $vendor)
     {
+        $this->onConnection('database');
     }
 
     public function handle(KorapayService $korapay): void
