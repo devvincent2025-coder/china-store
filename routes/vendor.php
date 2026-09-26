@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth', 'role:vendor'])->prefix('vendor')->name('vendor.')->group(function () {
     Route::get('/onboarding', [OnboardingController::class, 'show'])->name('onboarding');
     Route::post('/onboarding/profile', [OnboardingController::class, 'updateProfile'])->name('onboarding.profile');
+    Route::post('/onboarding/bank/resolve', [OnboardingController::class, 'resolveBankAccount'])->name('onboarding.bank.resolve');
     Route::post('/onboarding/bank-details', [OnboardingController::class, 'submitBankDetails'])->name('onboarding.bank-details');
 
     // Available during onboarding too — vendors may draft product copy later; keep it under auth+role.

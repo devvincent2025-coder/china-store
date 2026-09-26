@@ -29,7 +29,8 @@ class VendorResource extends Resource
     public static function getNavigationBadge(): ?string
     {
         $count = Vendor::where('bank_change_status', 'awaiting_approval')->count()
-            + Vendor::where('identity_verification_status', 'pending')->count();
+            + Vendor::where('identity_verification_status', 'pending')->count()
+            + Vendor::where('documents_status', 'pending')->count();
 
         return $count > 0 ? (string) $count : null;
     }
@@ -60,27 +61,28 @@ class VendorResource extends Resource
 
                 Forms\Components\Section::make('Verification documents')
                     ->schema([
-                        Forms\Components\Placeholder::make('verification_documents')
-                            ->label('Documents')
+                        Forms\Components\TextInput::make('documents_status')->label('Status')->disabled(),
+                        Forms\Components\Placeholder::make('verification_document_type')
+                            ->label('Document type')
+                            ->content(fn (?Vendor $record) => $record?->verification_document_type
+                                ? str($record->verification_document_type)->replace('_', ' ')->title()
+                                : 'Not submitted.'),
+                        Forms\Components\Placeholder::make('verification_document')
+                            ->label('Document')
                             ->content(function (?Vendor $record) {
-                                $paths = $record?->verification_documents ?? [];
-
-                                if (empty($paths)) {
-                                    return 'No documents uploaded.';
+                                if (! $record?->verification_document_path) {
+                                    return 'Not submitted.';
                                 }
 
-                                // These live in the PRIVATE Supabase bucket — sign a short-lived URL
-                                // per admin page load rather than storing/showing a permanent link,
-                                // since these are sensitive vendor documents.
+                                // Lives in the PRIVATE Supabase bucket — sign a short-lived URL per
+                                // admin page load rather than storing/showing a permanent link,
+                                // since this is a sensitive vendor document.
                                 $storage = app(\App\Services\Storage\SupabaseStorageService::class);
 
                                 return new \Illuminate\Support\HtmlString(
-                                    collect($paths)
-                                        ->map(fn ($path, $i) => '<a href="'.e($storage->signedUrl($path)).'" target="_blank" rel="noopener" class="underline text-primary-600">Document '.($i + 1).'</a>')
-                                        ->implode('<br>')
+                                    '<a href="'.e($storage->signedUrl($record->verification_document_path)).'" target="_blank" rel="noopener" class="underline text-primary-600">View document</a>'
                                 );
                             }),
-                        Forms\Components\TextInput::make('documents_status')->disabled(),
                         Forms\Components\Textarea::make('documents_rejection_reason')->disabled()->columnSpanFull(),
                     ])
                     ->columns(2),
@@ -163,6 +165,10 @@ class VendorResource extends Resource
                         'pending' => 'warning',
                         'rejected' => 'danger',
                         default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'not_submitted' => 'Not submitted',
+                        default => ucfirst($state),
                     }),
                 Tables\Columns\TextColumn::make('bank_verification_status')
                     ->badge()
@@ -214,6 +220,7 @@ class VendorResource extends Resource
                     ]),
                 Tables\Filters\SelectFilter::make('documents_status')
                     ->options([
+                        'not_submitted' => 'Not submitted',
                         'pending' => 'Pending',
                         'approved' => 'Approved',
                         'rejected' => 'Rejected',

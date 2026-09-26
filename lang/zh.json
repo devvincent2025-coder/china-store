@@ -806,7 +806,6 @@
     "Log Out": "退出登录",
     "Log Out & Create Vendor Account": "退出登录并创建商家账号",
     "Sign out of your account on this device.": "在此设备上退出您的账号。",
-    "You're logged in as a buyer. Vendor accounts are separate — log out and create a vendor account to start selling.": "您目前以买家身份登录。商家账号是独立的 — 请退出登录并创建一个商家账号以开始销售。",
     "Hide password": "隐藏密码",
     "Show password": "显示密码",
     "#verified · #lagos": "#已认证 · #拉各斯",
@@ -860,5 +859,6 @@
     "Increase quantity": "增加数量",
     "Updating cart…": "正在更新购物车…",
     "In your cart": "已在购物车中",
-    "View cart": "查看购物车"
+    "View cart": "查看购物车",
+    "You're logged in as :name — sell from this same account, no separate signup needed.": "您已以 :name 身份登录 — 直接用同一账户开店，无需单独注册。"
 }

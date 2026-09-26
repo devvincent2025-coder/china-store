@@ -806,7 +806,6 @@
     "Log Out": "Déconnexion",
     "Log Out & Create Vendor Account": "Se déconnecter et créer un compte vendeur",
     "Sign out of your account on this device.": "Déconnectez-vous de votre compte sur cet appareil.",
-    "You're logged in as a buyer. Vendor accounts are separate — log out and create a vendor account to start selling.": "Vous êtes connecté en tant qu'acheteur. Les comptes vendeurs sont distincts — déconnectez-vous et créez un compte vendeur pour commencer à vendre.",
     "Hide password": "Masquer le mot de passe",
     "Show password": "Afficher le mot de passe",
     "#verified · #lagos": "#vérifié · #lagos",
@@ -860,5 +859,6 @@
     "Increase quantity": "Augmenter la quantité",
     "Updating cart…": "Mise à jour du panier…",
     "In your cart": "Dans votre panier",
-    "View cart": "Voir le panier"
+    "View cart": "Voir le panier",
+    "You're logged in as :name — sell from this same account, no separate signup needed.": "Vous êtes connecté en tant que :name — vendez depuis ce même compte, aucune inscription séparée nécessaire."
 }

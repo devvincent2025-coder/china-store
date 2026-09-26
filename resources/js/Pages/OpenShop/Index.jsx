@@ -22,7 +22,7 @@ function BecomeVendorForm({ user }) {
     return (
         <div className="max-w-md rounded-lg bg-tb-soft px-4 py-4">
             <p className="text-sm text-tb-text">
-                {__("You're logged in as {name} — sell from this same account, no separate signup needed.", { name: user.name })}
+                {__("You're logged in as :name — sell from this same account, no separate signup needed.", { name: user.name })}
             </p>
 
             <form onSubmit={submit} className="mt-4 space-y-4">
