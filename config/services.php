@@ -73,6 +73,17 @@ return [
         'phone_otp_required' => (bool) env('PHONE_OTP_REQUIRED', true),
     ],
 
+    'poof' => [
+        // Poof (poof.bg) background removal for vendor product photos — see
+        // App\Services\Image\PoofBackgroundRemovalService. Free plan: 100 credits/month, no card
+        // required (docs.poof.bg). Leaving the key blank disables this entirely — photos are just
+        // compressed as before (App\Services\Image\ImageCompressionService), same as this feature
+        // never existed. `enabled` is a separate switch so an admin can turn this off (e.g. to
+        // conserve credits) without removing the key.
+        'api_key' => env('POOF_API_KEY'),
+        'enabled' => (bool) env('PRODUCT_BACKGROUND_REMOVAL_ENABLED', true),
+    ],
+
     'supabase' => [
         // Project URL, e.g. https://xxxxxxxxxxxx.supabase.co — from Project Settings -> API.
         'url' => env('SUPABASE_URL'),
