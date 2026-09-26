@@ -1,7 +1,70 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import StorefrontLayout from '@/Layouts/StorefrontLayout';
 import OpenShopIllustration from '@/Components/OpenShopIllustration';
+import InputError from '@/Components/InputError';
+import InputLabel from '@/Components/InputLabel';
+import TextInput from '@/Components/TextInput';
+import PhoneInput from '@/Components/PhoneInput';
 import { useTranslation } from '@/hooks/useTranslation';
+
+function BecomeVendorForm({ user }) {
+    const { __ } = useTranslation();
+    const { data, setData, post, processing, errors } = useForm({
+        business_name: '',
+        phone: user.phone ?? '',
+    });
+
+    const submit = (e) => {
+        e.preventDefault();
+        post(route('open-shop.become-vendor'));
+    };
+
+    return (
+        <div className="max-w-md rounded-lg bg-tb-soft px-4 py-4">
+            <p className="text-sm text-tb-text">
+                {__("You're logged in as {name} — sell from this same account, no separate signup needed.", { name: user.name })}
+            </p>
+
+            <form onSubmit={submit} className="mt-4 space-y-4">
+                <div>
+                    <InputLabel htmlFor="business_name" value={__('Business / Store Name')} />
+                    <TextInput
+                        id="business_name"
+                        className="mt-1 block w-full"
+                        value={data.business_name}
+                        onChange={(e) => setData('business_name', e.target.value)}
+                        autoFocus
+                        required
+                    />
+                    <InputError message={errors.business_name} className="mt-1" />
+                </div>
+
+                {/* Only asked for on the rare account with no phone on file yet — see
+                    Auth\BecomeVendorController's doc comment. */}
+                {!user.phone && (
+                    <div>
+                        <InputLabel htmlFor="become-vendor-phone" value={__('Phone Number')} />
+                        <PhoneInput
+                            id="become-vendor-phone"
+                            value={data.phone}
+                            onChange={(phone) => setData('phone', phone)}
+                            className="mt-1"
+                        />
+                        <InputError message={errors.phone} className="mt-1" />
+                    </div>
+                )}
+
+                <button
+                    type="submit"
+                    disabled={processing}
+                    className="inline-flex rounded-full bg-tb px-6 py-2.5 text-sm font-semibold text-white hover:bg-tb-hover disabled:opacity-50"
+                >
+                    {processing ? __('Setting up…') : __('Start Selling')}
+                </button>
+            </form>
+        </div>
+    );
+}
 
 export default function Index() {
     const { auth } = usePage().props;
@@ -46,26 +109,11 @@ export default function Index() {
                                 {user ? (
                                     // Reaching this page as a logged-in user always means a BUYER
                                     // account (OpenShopController redirects an existing vendor
-                                    // straight to their dashboard before this ever renders) —
-                                    // vendor.onboarding requires the 'vendor' role, which a buyer
-                                    // account never has, so linking there directly used to 403.
-                                    // Vendor registration is its own separate, guest-only signup
-                                    // flow (see Auth\VendorRegisteredUserController), so becoming a
-                                    // vendor from an existing buyer account means logging out first.
-                                    <div className="max-w-md rounded-lg bg-tb-soft px-4 py-3">
-                                        <p className="text-sm text-tb-text">
-                                            {__("You're logged in as a buyer. Vendor accounts are separate — log out and create a vendor account to start selling.")}
-                                        </p>
-                                        <Link
-                                            href={route('logout')}
-                                            method="post"
-                                            as="button"
-                                            data={{ to_vendor_register: true }}
-                                            className="mt-3 inline-flex rounded-full bg-tb px-6 py-2.5 text-sm font-semibold text-white hover:bg-tb-hover"
-                                        >
-                                            {__('Log Out & Create Vendor Account')}
-                                        </Link>
-                                    </div>
+                                    // straight to their dashboard before this ever renders) — see
+                                    // Auth\BecomeVendorController's doc comment for why this adds a
+                                    // vendor record to the SAME account rather than requiring a
+                                    // brand new one.
+                                    <BecomeVendorForm user={user} />
                                 ) : (
                                     <div className="flex flex-wrap gap-3">
                                         <Link

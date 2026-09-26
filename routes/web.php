@@ -16,6 +16,7 @@ use App\Http\Controllers\ImageSearchController;
 use App\Http\Controllers\SearchSuggestionController;
 use App\Http\Controllers\InvoicePaymentController;
 use App\Http\Controllers\KidsController;
+use App\Http\Controllers\Auth\BecomeVendorController;
 use App\Http\Controllers\OpenShopController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
@@ -69,6 +70,9 @@ Route::get('/stores/{vendorStore:slug}', [VendorStoreController::class, 'show'])
 
 Route::get('/favourites', FavouritesController::class)->name('favourites.index');
 Route::get('/open-a-shop', OpenShopController::class)->name('open-shop');
+Route::post('/open-a-shop/become-vendor', [BecomeVendorController::class, 'store'])
+    ->middleware('auth')
+    ->name('open-shop.become-vendor');
 
 // Legal & policy pages — static content, linked from the storefront footer/header, checkout, and
 // vendor onboarding/registration. See resources/js/Pages/Legal/*.jsx.
