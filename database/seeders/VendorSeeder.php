@@ -101,7 +101,6 @@ class VendorSeeder extends Seeder
                     'business_name' => $v['business_name'],
                     'contact_email' => $v['email'],
                     'contact_phone' => '0'.fake()->numerify('#########'),
-                    'verification_documents' => null,
                     'documents_status' => 'approved',
                     'documents_reviewed_at' => now()->subDays(14),
                     // Korapay's own documented NGN sandbox test account — always resolves and

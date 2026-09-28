@@ -65,6 +65,21 @@ class VerifyVendorBankAccount implements ShouldQueue
     }
 
     /**
+     * Called once every retry ($tries = 3 above) has thrown something OTHER than
+     * KorapayRequestException (already handled above) — a network timeout, a bug, anything
+     * unexpected. Without this, a vendor whose job dies this way is stuck on
+     * bank_verification_status = 'pending' forever: Vendor/Onboarding.jsx disables the whole bank
+     * form while it's 'pending' (nothing left to resubmit), and only re-enables it on 'failed'.
+     */
+    public function failed(\Throwable $exception): void
+    {
+        $this->vendor->update([
+            'bank_verification_status' => 'failed',
+            'bank_verification_response' => ['error' => $exception->getMessage()],
+        ]);
+    }
+
+    /**
      * A vendor's registered business name rarely matches the bank account holder's name exactly
      * (personal account vs. registered business name), so this is a soft heuristic used only to
      * decide whether to show a warning banner — it never blocks onboarding on its own.

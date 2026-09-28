@@ -11,6 +11,7 @@ use App\Services\Sms\SmsSendException;
 use App\Services\Sms\SmsService;
 use App\Services\Storage\SupabaseStorageService;
 use App\Support\Dev\OtpLogger;
+use App\Support\Notifications\NotificationDispatcher;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -173,7 +174,7 @@ class VendorIdentityService
             'identity_rejection_reason' => null,
         ]);
 
-        $vendor->user->notify(new IdentityVerificationApproved);
+        NotificationDispatcher::sendIsolated($vendor->user, new IdentityVerificationApproved);
     }
 
     public function rejectIdentity(Vendor $vendor, User $admin, string $reason): void
@@ -185,6 +186,6 @@ class VendorIdentityService
             'identity_rejection_reason' => $reason,
         ]);
 
-        $vendor->user->notify(new IdentityVerificationRejected($reason));
+        NotificationDispatcher::sendIsolated($vendor->user, new IdentityVerificationRejected($reason));
     }
 }

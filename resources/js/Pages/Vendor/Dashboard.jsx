@@ -121,6 +121,7 @@ export default function Dashboard({ vendor, stats, recentOrders, analytics, hasA
     const kycComplete = !!auth?.user?.email_verified_at
         && !!vendor?.phone_verified_at
         && vendor?.identity_verification_status === 'approved';
+    const kycRejected = vendor?.identity_verification_status === 'rejected';
 
     return (
         <VendorLayout vendor={vendor}>
@@ -128,7 +129,29 @@ export default function Dashboard({ vendor, stats, recentOrders, analytics, hasA
 
             <h1 className="mb-6 text-xl font-bold text-neutral-900">{__('Dashboard')}</h1>
 
-            {!kycComplete && (
+            {/* Rejection gets its own distinct (red, not amber) banner with the actual reason
+                right here — the generic "not complete yet" banner below covers every other
+                incomplete state (never started, awaiting review, missing phone/email). */}
+            {kycRejected ? (
+                <div className="mb-6 flex flex-col items-start justify-between gap-3 rounded-lg border border-red-300 bg-red-50 p-4 sm:flex-row sm:items-center">
+                    <div className="flex items-start gap-3">
+                        <svg className="mt-0.5 h-5 w-5 shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <div>
+                            <p className="text-sm font-semibold text-red-800">{__('Your identity verification (KYC) was not approved')}</p>
+                            <p className="text-sm text-red-700">{vendor?.identity_rejection_reason}</p>
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => setKycOpen(true)}
+                        className="shrink-0 rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+                    >
+                        {__('View Reason & Reupload')}
+                    </button>
+                </div>
+            ) : !kycComplete && (
                 <div className="mb-6 flex flex-col items-start justify-between gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 sm:flex-row sm:items-center">
                     <div className="flex items-start gap-3">
                         <svg className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
