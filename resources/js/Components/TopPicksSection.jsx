@@ -9,41 +9,43 @@ import { useTranslation } from '@/hooks/useTranslation';
  * requested; a click goes through /ads/{id}/click, which records the click and forwards to the
  * vendor's store page.
  */
-export default function TopPicksSection({ topPicks = [] }) {
+export default function TopPicksSection({ topPicks = [], eyebrow, title }) {
     const { __ } = useTranslation();
 
     if (!topPicks || topPicks.length === 0) return null;
 
     return (
-        <section className="mt-4">
-            <div className="mb-3 flex items-center gap-1.5">
-                <svg className="h-5 w-5 text-tb" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.539-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                </svg>
-                <h2 className="font-display text-[18px] font-semibold text-tb-text">{__('Top Picks — Recommended for you')}</h2>
+        <section className="mt-8">
+            <div className="mb-4 flex items-end justify-between gap-3">
+                <div>
+                    <p className="font-ui text-[11px] font-bold uppercase tracking-[0.18em] text-tb">{eyebrow || __('Sponsored')}</p>
+                    <h2 className="font-display text-[20px] font-bold tracking-tight text-tb-ink sm:text-[22px]">
+                        {title || __('Top Picks — Recommended for you')}
+                    </h2>
+                </div>
             </div>
 
-            <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'thin' }}>
+            <div className="no-scrollbar -mx-1.5 flex snap-x gap-3 overflow-x-auto px-1.5 pb-3">
                 {topPicks.map((pick) => (
                     <a
                         key={pick.token}
                         href={route('go.visit', pick.token)}
-                        className="group block w-48 shrink-0 overflow-hidden rounded-lg border border-tb-border bg-white shadow-sm transition hover:shadow-md"
+                        className="group relative block aspect-[4/5] w-44 shrink-0 snap-start overflow-hidden rounded-2xl bg-tb-peach shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-float sm:w-52"
                     >
-                        <div className="aspect-[4/3] w-full overflow-hidden bg-neutral-100">
-                            {pick.banner_url ? (
-                                <img src={pick.banner_url} alt="" className="h-full w-full object-cover transition group-hover:scale-105" />
-                            ) : (
-                                <div className="flex h-full w-full items-center justify-center bg-orange-50 text-3xl font-bold text-orange-300">
-                                    {pick.store?.name ? t(pick.store.name).charAt(0) : '?'}
-                                </div>
-                            )}
-                        </div>
-                        <div className="p-2.5">
-                            <p className="truncate text-sm font-semibold text-tb-text">{pick.store ? t(pick.store.name) : __('Store')}</p>
-                            {pick.store?.city && (
-                                <p className="truncate text-xs text-tb-muted">{pick.store.city}</p>
-                            )}
+                        {pick.banner_url ? (
+                            <img src={pick.banner_url} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                        ) : (
+                            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-tb-peach via-[#FFD2B8] to-[#FFB59A] font-display text-5xl font-extrabold text-white/90">
+                                {pick.store?.name ? t(pick.store.name).charAt(0) : '?'}
+                            </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+                        <div className="absolute inset-x-2 bottom-2 rounded-xl bg-white/90 px-3 py-2 shadow-soft">
+                            <p className="truncate text-[13px] font-bold text-tb-ink">{pick.store ? t(pick.store.name) : __('Store')}</p>
+                            <p className="flex items-center gap-1 truncate text-[11px] text-neutral-600">
+                                {pick.store?.city ? pick.store.city : __('Visit store')}
+                                <span className="ml-auto text-tb transition group-hover:translate-x-0.5">→</span>
+                            </p>
                         </div>
                     </a>
                 ))}

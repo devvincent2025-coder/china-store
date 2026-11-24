@@ -74,7 +74,9 @@ class CartItem extends Model
             return $this->unit_price;
         }
 
-        return $this->product->compare_price ?? $this->unit_price;
+        // original_price covers both a vendor compare_price and a live homepage deal (the normal
+        // price becomes the "was" price) — see Product::getOriginalPriceAttribute().
+        return max($this->product->original_price ?? 0, $this->unit_price);
     }
 
     /**

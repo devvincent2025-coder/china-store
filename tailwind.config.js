@@ -32,6 +32,11 @@ export default {
                     border: '#EEEEEE',
                     page: '#F5F5F5',
                     card: '#F7F7F7',
+                    // Modern storefront accents — mixed with the brand orange for gradients/glows
+                    ink: '#17110D',
+                    amber: '#FFB020',
+                    peach: '#FFE3D3',
+                    cream: '#FFF8F3',
                 },
                 primary: {
                     50: '#fff7ed',
@@ -52,6 +57,10 @@ export default {
             boxShadow: {
                 card: '0 1px 2px rgba(0,0,0,0.04)',
                 lift: '0 2px 8px rgba(0,0,0,0.08)',
+                soft: '0 1px 2px rgba(23,17,13,0.04), 0 8px 24px -12px rgba(23,17,13,0.12)',
+                float: '0 2px 4px rgba(23,17,13,0.04), 0 18px 40px -16px rgba(23,17,13,0.22)',
+                glow: '0 10px 30px -10px rgba(255,80,0,0.55)',
+                glass: 'inset 0 1px 0 rgba(255,255,255,0.6), 0 8px 32px -12px rgba(23,17,13,0.18)',
             },
         },
     },

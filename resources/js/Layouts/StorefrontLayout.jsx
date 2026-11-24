@@ -160,11 +160,11 @@ export default function StorefrontLayout({ children, categories: pageCategories,
     };
 
     return (
-        <div className="flex min-h-screen flex-col bg-white font-sans text-tb-text">
-            <div className="border-b border-tb-border bg-[#f5f5f5] font-ui text-[12px] text-tb-muted">
+        <div className="cin-aurora flex min-h-screen flex-col font-sans text-tb-text">
+            <div className="border-b border-black/5 bg-white/40 font-ui text-[12px] text-neutral-500">
                 <div className="mx-auto flex min-h-8 max-w-marketplace items-center justify-between px-1.5 pb-1.5 pt-2.5 sm:h-8 sm:px-2 sm:py-0">
                     <div className="flex items-center gap-3">
-                        <span className="hidden sm:inline">{__('Deliver to Nigeria')}</span>
+                        {/* <span className="hidden sm:inline">{__('Deliver to Nigeria')}</span> */}
                         <span className="hidden text-tb-border sm:inline">|</span>
                         {!user && (
                             <>
@@ -289,11 +289,11 @@ export default function StorefrontLayout({ children, categories: pageCategories,
             {/* Sticky on every breakpoint — logo/search staying reachable while scrolling is one of
                 the cheapest "feels like a native app, not a scrolled-away website" wins on mobile,
                 and is a harmless, common pattern on desktop too. */}
-            <div className="sticky top-0 z-30 bg-white">
+            <div className="sticky top-0 z-30 border-b border-black/5 bg-white/70 backdrop-blur-xl backdrop-saturate-150">
                 {/* This whole row collapses to nothing on mobile once the logo (its only child
                     below sm:) is hidden — the mobile search bar lives in its own separate row
                     further down, so there's no py-4 worth of dead space left behind here. */}
-                <div className="mx-auto flex max-w-marketplace items-center gap-4 px-1.5 sm:gap-6 sm:px-2 sm:py-4">
+                <div className="mx-auto flex max-w-marketplace items-center gap-4 px-1.5 sm:gap-6 sm:px-2 sm:py-3">
                     {/* Hidden on mobile — the logo lockup + tagline take up a lot of width on a
                         phone screen for what the header can otherwise spend on the search bar; the
                         logo still appears in the footer (see below) and the home tab in
@@ -304,18 +304,18 @@ export default function StorefrontLayout({ children, categories: pageCategories,
                             alt="ChinaInNigeria"
                             className="h-16 w-[11rem] origin-center scale-x-[1.12] object-contain object-center sm:h-[4.5rem] sm:w-[13rem] md:h-[4.75rem] md:w-60"
                         />
-                        <span className="mt-1 max-w-[14rem] text-[11px] font-medium leading-snug text-tb-muted sm:max-w-[16rem] sm:text-[12px]">
+                        {/* <span className="mt-1 max-w-[14rem] text-[11px] font-medium leading-snug text-tb-muted sm:max-w-[16rem] sm:text-[12px]">
                             {__('Chinese stores · Unbeatable prices')}
-                        </span>
+                        </span> */}
                     </Link>
 
                     <div className="mx-auto hidden w-full max-w-[860px] items-center gap-2.5 md:flex">
                         <form onSubmit={submitSearch} className="relative min-w-0 flex-1">
-                            <div className="flex h-10 items-stretch overflow-hidden rounded-lg border-2 border-tb">
+                            <div className="flex h-12 items-stretch gap-1 rounded-full border border-black/10 bg-white p-1 shadow-soft transition focus-within:border-tb/50 focus-within:ring-4 focus-within:ring-tb/10">
                                 <select
                                     value={searchCategory}
                                     onChange={(e) => setSearchCategory(e.target.value)}
-                                    className="w-[88px] shrink-0 border-0 border-r border-tb-border bg-white py-0 pl-3 pr-1 text-[12px] text-tb-text focus:ring-0"
+                                    className="w-[96px] shrink-0 rounded-full border-0 bg-tb-cream py-0 pl-4 pr-1 text-[12px] font-medium text-tb-text focus:ring-0"
                                 >
                                     <option value="">{__('All')}</option>
                                     {categories.map((cat) => (
@@ -331,13 +331,17 @@ export default function StorefrontLayout({ children, categories: pageCategories,
                                     onFocus={() => setDesktopSuggestOpen(true)}
                                     onBlur={() => setDesktopSuggestOpen(false)}
                                     placeholder={__('Search products, stores...')}
-                                    className="h-full min-w-0 flex-1 border-0 px-3 text-[13px] text-tb-text placeholder:text-tb-muted focus:ring-0"
+                                    className="h-full min-w-0 flex-1 border-0 bg-transparent px-3 text-[14px] text-tb-text placeholder:text-neutral-400 focus:ring-0"
                                     autoComplete="off"
                                 />
                                 <button
                                     type="submit"
-                                    className="w-[88px] shrink-0 bg-tb font-display text-[15px] font-semibold text-white hover:bg-tb-hover"
+                                    className="cin-gradient inline-flex shrink-0 items-center gap-1.5 rounded-full px-6 font-display text-[14px] font-semibold text-white shadow-glow transition hover:brightness-110"
                                 >
+                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                                        <circle cx="11" cy="11" r="7" strokeWidth={2.2} />
+                                        <path strokeLinecap="round" strokeWidth={2.2} d="M20 20l-3.5-3.5" />
+                                    </svg>
                                     {__('Search')}
                                 </button>
                             </div>
@@ -354,7 +358,7 @@ export default function StorefrontLayout({ children, categories: pageCategories,
                             ref={imageSearchBtnRef}
                             type="button"
                             onClick={() => setImageSearchOpen((o) => !o)}
-                            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-tb-soft px-3.5 py-6 font-display text-[13px] font-bold text-tb hover:bg-[#ffe4d4]"
+                            className="inline-flex h-12 shrink-0 items-center gap-1.5 rounded-full border border-tb/20 bg-white/80 px-4 font-display text-[13px] font-bold text-tb shadow-soft transition hover:border-tb/40 hover:bg-tb-soft"
                         >
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 7a2 2 0 012-2h3l2-2h4l2 2h3a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
@@ -367,7 +371,7 @@ export default function StorefrontLayout({ children, categories: pageCategories,
                     <div className="ml-auto hidden shrink-0 lg:block">
                         <Link
                             href={route('cart.index')}
-                            className="relative flex h-10 items-center gap-2 rounded-full border border-tb px-4 text-[13px] font-medium text-tb hover:bg-tb-soft"
+                            className="relative flex h-12 items-center gap-2 rounded-full bg-tb-ink px-5 text-[13px] font-semibold text-white shadow-float transition hover:bg-black"
                         >
                             <span className="relative">
                                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -384,9 +388,9 @@ export default function StorefrontLayout({ children, categories: pageCategories,
                     </div>
                 </div>
 
-                <div className="relative border-t border-tb-border px-1.5 py-2 sm:px-2 md:hidden">
+                <div className="relative px-1.5 py-2 sm:px-2 md:hidden">
                     <form onSubmit={submitSearch}>
-                        <div className="flex h-9 overflow-hidden rounded-full border-2 border-tb">
+                        <div className="flex h-10 overflow-hidden rounded-full border border-black/10 bg-white p-0.5 shadow-soft focus-within:border-tb/50 focus-within:ring-4 focus-within:ring-tb/10">
                             <input
                                 type="text"
                                 value={search}
@@ -394,14 +398,14 @@ export default function StorefrontLayout({ children, categories: pageCategories,
                                 onFocus={() => setMobileSuggestOpen(true)}
                                 onBlur={() => setMobileSuggestOpen(false)}
                                 placeholder={__('Search products, stores...')}
-                                className="min-w-0 flex-1 border-0 px-3 text-[13px] focus:ring-0"
+                                className="min-w-0 flex-1 border-0 bg-transparent px-3 text-[13px] placeholder:text-neutral-400 focus:ring-0"
                                 autoComplete="off"
                             />
                             <button
                                 ref={mobileImageSearchBtnRef}
                                 type="button"
                                 onClick={() => setImageSearchOpen((o) => !o)}
-                                className="shrink-0 border-l border-tb-border bg-tb-soft px-2.5 text-tb"
+                                className="shrink-0 px-2.5 text-tb"
                                 aria-label={__('Search with Image')}
                             >
                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -409,7 +413,7 @@ export default function StorefrontLayout({ children, categories: pageCategories,
                                     <circle cx="12" cy="13" r="3.5" />
                                 </svg>
                             </button>
-                            <button type="submit" className="bg-tb px-4 font-display text-[13px] font-semibold text-white">
+                            <button type="submit" className="cin-gradient rounded-full px-4 font-display text-[13px] font-semibold text-white">
                                 {__('Search')}
                             </button>
                         </div>
@@ -435,18 +439,22 @@ export default function StorefrontLayout({ children, categories: pageCategories,
                 </div>
             </div>
 
-            <div className="bg-white">
-                <div className="mx-auto hidden w-full max-w-marketplace px-1.5 pb-3 sm:px-2 md:block">
-                    <div className="flex w-full items-center justify-between gap-2 font-ui text-[13px] font-semibold">
+            <div>
+                <div className="mx-auto hidden w-full max-w-marketplace px-1.5 pt-3 sm:px-2 md:block">
+                    <div className="no-scrollbar flex w-full items-center gap-2 overflow-x-auto font-ui text-[13px] font-semibold xl:justify-between">
                         {CHANNEL_DEFS.map((ch) => (
-                            <Link key={ch.labelKey} href={ch.href} className={`inline-flex shrink-0 items-center gap-1 ${ch.color} hover:opacity-80`}>
+                            <Link
+                                key={ch.labelKey}
+                                href={ch.href}
+                                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/70 px-3.5 py-1.5 ring-1 ring-black/5 transition hover:-translate-y-px hover:bg-white hover:shadow-soft ${ch.color}`}
+                            >
                                 {ch.icon}
                                 <span>{__(ch.labelKey)}</span>
                             </Link>
                         ))}
                         <Link
                             href={isVendor ? route('vendor.dashboard') : route('open-shop')}
-                            className="inline-flex shrink-0 items-center gap-1 text-tb hover:opacity-80"
+                            className="cin-gradient inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-white shadow-glow transition hover:-translate-y-px hover:brightness-110"
                         >
                             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6M4 7h16l-1 12H5L4 7z" />
@@ -522,8 +530,8 @@ export default function StorefrontLayout({ children, categories: pageCategories,
 
             <main className="flex-1">{children}</main>
 
-            <footer className="mt-8 border-t border-tb-border bg-white">
-                <div className="mx-auto max-w-marketplace px-1.5 py-10 text-[12px] text-tb-muted sm:px-2">
+            <footer className="mt-12 border-t border-black/5 bg-white">
+                <div className="mx-auto max-w-marketplace px-1.5 py-10 text-[14px] text-neutral-700 sm:px-2">
                     <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-6">
                         <div>
                             <img
@@ -534,7 +542,7 @@ export default function StorefrontLayout({ children, categories: pageCategories,
                             <p>{__('Chinese-run stores delivering across Nigeria.')}</p>
                         </div>
                         <div>
-                            <h4 className="font-display mb-3 text-[13px] font-semibold text-tb-text">{__('Shop')}</h4>
+                            <h4 className="font-display mb-3 text-[15px] font-bold text-tb-ink">{__('Shop')}</h4>
                             <ul className="space-y-2">
                                 <li>
                                     <Link href={route('products.index')} className="hover:text-tb">
@@ -559,7 +567,7 @@ export default function StorefrontLayout({ children, categories: pageCategories,
                             </ul>
                         </div>
                         <div>
-                            <h4 className="font-display mb-3 text-[13px] font-semibold text-tb-text">{__('Support')}</h4>
+                            <h4 className="font-display mb-3 text-[15px] font-bold text-tb-ink">{__('Support')}</h4>
                             <ul className="space-y-2">
                                 <li>
                                     <Link href={route('orders.index')} className="hover:text-tb">
@@ -584,7 +592,7 @@ export default function StorefrontLayout({ children, categories: pageCategories,
                             </ul>
                         </div>
                         <div>
-                            <h4 className="font-display mb-3 text-[13px] font-semibold text-tb-text">{__('Legal')}</h4>
+                            <h4 className="font-display mb-3 text-[15px] font-bold text-tb-ink">{__('Legal')}</h4>
                             <ul className="space-y-2">
                                 <li>
                                     <Link href={route('legal.terms')} className="hover:text-tb">
@@ -609,7 +617,7 @@ export default function StorefrontLayout({ children, categories: pageCategories,
                             </ul>
                         </div>
                         <div>
-                            <h4 className="font-display mb-3 text-[13px] font-semibold text-tb-text">{__('Sell')}</h4>
+                            <h4 className="font-display mb-3 text-[15px] font-bold text-tb-ink">{__('Sell')}</h4>
                             <ul className="space-y-2">
                                 <li>
                                     <Link href={isVendor ? route('vendor.dashboard') : route('open-shop')} className="hover:text-tb">
@@ -619,7 +627,7 @@ export default function StorefrontLayout({ children, categories: pageCategories,
                             </ul>
                         </div>
                         <div>
-                            <h4 className="font-display mb-3 text-[13px] font-semibold text-tb-text">{__('Language')}</h4>
+                            <h4 className="font-display mb-3 text-[15px] font-bold text-tb-ink">{__('Language')}</h4>
                             <div className="flex gap-3">
                                 {LANGUAGES.map((lang) => (
                                     <a

@@ -44,7 +44,7 @@ class SearchSuggestionController extends Controller
             'suggestions' => $products->map(fn (Product $product) => [
                 'id' => $product->id,
                 'title' => $product->title,
-                'price' => $product->price,
+                'price' => $product->effective_price,
                 'image' => $product->images->first()?->display_url,
                 'store_name' => $product->vendor?->store?->name ?: $product->vendor?->business_name,
                 'url' => route('products.show', $product),

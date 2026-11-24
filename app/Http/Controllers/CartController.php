@@ -51,6 +51,14 @@ class CartController extends Controller
             abort_unless($variant->product_id === $product->id, 404);
         }
 
+        // Quick-add from a product card can't pick a size/colour — send the buyer to the product
+        // page to choose, rather than adding a variant-less line for a product that has options.
+        if (! $variant && $product->options()->exists()) {
+            return redirect()
+                ->route('products.show', $product->slug)
+                ->with('warning', __('Please choose your options before adding this item to your cart.'));
+        }
+
         $cart = $this->carts->resolve($request);
 
         $item = $cart->items()->firstOrNew([

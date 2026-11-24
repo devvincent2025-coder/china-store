@@ -27,6 +27,7 @@ class AdminPermissionSeeder extends Seeder
         'banner' => ['view_any', 'create', 'update', 'delete'],
         'category' => ['view_any', 'create', 'update', 'delete'],
         'coupon' => ['view_any', 'create', 'update', 'delete'],
+        'home_section' => ['view_any', 'create', 'update', 'delete'],
         'invoice' => ['view_any', 'view'],
         'ledger_entry' => ['view_any'],
         'order' => ['view_any', 'view'],

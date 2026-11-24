@@ -34,8 +34,8 @@ export default function Index({ itemsByVendor }) {
         <StorefrontLayout>
             <Head title="Your Cart" />
 
-            <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
-                <h1 className="mb-6 text-xl font-bold text-neutral-900">Your Cart</h1>
+            <div className="mx-auto max-w-marketplace px-4 py-6 sm:px-6 lg:px-8">
+                <h1 className="mb-6 text-2xl font-bold text-neutral-900">Your Cart</h1>
 
                 {isEmpty ? (
                     <EmptyState
@@ -48,15 +48,15 @@ export default function Index({ itemsByVendor }) {
                     <div className="flex flex-col gap-8 lg:flex-row">
                         <div className="flex-1 space-y-6">
                             {itemsByVendor.map((group) => (
-                                <div key={group.vendor.id} className="rounded-lg border border-neutral-200 bg-white">
-                                    <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-3">
-                                        <span className="text-sm font-semibold text-neutral-800">
+                                <div key={group.vendor.id} className="overflow-hidden rounded-2xl bg-white">
+                                    <div className="flex items-center justify-between border-b border-neutral-100 px-5 py-4">
+                                        <span className="text-base font-semibold text-neutral-800">
                                             {group.vendor.store ? t(group.vendor.store.name) : group.vendor.business_name}
                                         </span>
-                                        <span className="flex items-baseline gap-2 text-sm text-neutral-500">
+                                        <span className="flex items-baseline gap-2 text-base text-neutral-500">
                                             {__('Subtotal')}:
                                             {group.original_subtotal > group.subtotal && (
-                                                <span className="text-xs text-neutral-400 line-through">
+                                                <span className="text-sm text-neutral-400 line-through">
                                                     {formatNaira(group.original_subtotal)}
                                                 </span>
                                             )}
@@ -65,8 +65,8 @@ export default function Index({ itemsByVendor }) {
                                     </div>
                                     <div className="divide-y divide-neutral-100">
                                         {group.items.map((item) => (
-                                            <div key={item.id} className="flex items-center gap-4 px-4 py-4">
-                                                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md bg-neutral-100">
+                                            <div key={item.id} className="flex items-center gap-4 px-5 py-5">
+                                                <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-neutral-100">
                                                     {item.product?.images?.[0] && (
                                                         <img
                                                             src={item.product.images[0].enhanced_url ?? item.product.images[0].original_url}
@@ -78,12 +78,12 @@ export default function Index({ itemsByVendor }) {
                                                 <div className="flex-1 min-w-0">
                                                     <Link
                                                         href={item.product ? route('products.show', item.product.slug) : '#'}
-                                                        className="line-clamp-2 text-sm text-neutral-800 hover:text-orange-600"
+                                                        className="line-clamp-2 text-base font-medium text-neutral-800 hover:text-orange-600"
                                                     >
                                                         {item.product ? t(item.product.title) : 'Product'}
                                                     </Link>
                                                     {item.variant?.option_values?.length > 0 && (
-                                                        <p className="mt-0.5 text-xs text-neutral-400">
+                                                        <p className="mt-0.5 text-sm text-neutral-500">
                                                             {item.variant.option_values.map((ov) => t(ov.value)).join(' / ')}
                                                         </p>
                                                     )}
@@ -91,22 +91,22 @@ export default function Index({ itemsByVendor }) {
                                                         kobo={item.unit_price}
                                                         comparePriceKobo={item.original_unit_price}
                                                         className="mt-1"
-                                                        size="sm"
+                                                        size="base"
                                                     />
                                                     {item.min_order_quantity > 1 && (
-                                                        <p className="mt-0.5 text-xs text-neutral-400">
+                                                        <p className="mt-0.5 text-sm text-neutral-500">
                                                             {__('Minimum order: :count', { count: item.min_order_quantity })}
                                                         </p>
                                                     )}
                                                     {item.quantity > stockFor(item) && (
-                                                        <p className="mt-0.5 text-xs font-medium text-red-600">
+                                                        <p className="mt-0.5 text-sm font-medium text-red-600">
                                                             {stockFor(item) > 0
                                                                 ? __('Only :count left in stock.', { count: stockFor(item) })
                                                                 : __('This item is out of stock.')}
                                                         </p>
                                                     )}
                                                     {quantityErrors[item.id] && (
-                                                        <p className="mt-0.5 text-xs text-red-600">{quantityErrors[item.id]}</p>
+                                                        <p className="mt-0.5 text-sm text-red-600">{quantityErrors[item.id]}</p>
                                                     )}
                                                 </div>
                                                 <div className="flex items-center gap-1">
@@ -118,7 +118,7 @@ export default function Index({ itemsByVendor }) {
                                                     >
                                                         −
                                                     </button>
-                                                    <span className="w-9 text-center text-base font-semibold">{item.quantity}</span>
+                                                    <span className="w-10 text-center text-lg font-semibold">{item.quantity}</span>
                                                     <button
                                                         onClick={() => updateQuantity(item, item.quantity + 1)}
                                                         disabled={item.quantity >= stockFor(item)}
@@ -144,15 +144,15 @@ export default function Index({ itemsByVendor }) {
                             ))}
                         </div>
 
-                        <div className="w-full lg:w-72">
-                            <div className="rounded-lg border border-neutral-200 bg-white p-5">
+                        <div className="w-full lg:w-80">
+                            <div className="rounded-2xl bg-white p-6">
                                 <div className="mb-4 flex items-center justify-between">
-                                    <span className="text-sm text-neutral-600">Grand Total</span>
-                                    <PriceTag kobo={grandTotal} size="lg" />
+                                    <span className="text-base font-medium text-neutral-700">Grand Total</span>
+                                    <PriceTag kobo={grandTotal} size="xl" />
                                 </div>
                                 <Link
                                     href={route('checkout.index')}
-                                    className="block w-full rounded-md bg-orange-600 py-3 text-center text-sm font-semibold text-white hover:bg-orange-700"
+                                    className="block w-full rounded-full bg-orange-600 py-3.5 text-center text-base font-semibold text-white hover:bg-orange-700"
                                 >
                                     Proceed to Checkout
                                 </Link>

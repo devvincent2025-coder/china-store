@@ -123,6 +123,12 @@ class VendorSeeder extends Seeder
                     'shipping_fee_fixed_amount' => $v['shipping_fee_fixed_amount'],
                     'shipping_fee_percentage' => $v['shipping_fee_percentage'],
                     'status' => 'active',
+                    // Product::scopePubliclyListed() hides every product whose vendor isn't
+                    // identity-approved AND phone-verified — without these, a fresh seed shows an
+                    // empty storefront. Celebration marked seen so the KYC modal doesn't pop up.
+                    'identity_verification_status' => 'approved',
+                    'phone_verified_at' => now()->subDays(14),
+                    'kyc_celebration_seen_at' => now()->subDays(14),
                 ]
             );
 

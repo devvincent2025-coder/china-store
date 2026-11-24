@@ -20,9 +20,11 @@
         @endforeach
         @endif
         <g:availability>{{ $product->isInStock() ? 'in_stock' : 'out_of_stock' }}</g:availability>
-        <g:price>{{ number_format($product->price / 100, 2, '.', '') }} NGN</g:price>
-        @if($product->compare_price && $product->compare_price > $product->price)
-        <g:sale_price>{{ number_format($product->price / 100, 2, '.', '') }} NGN</g:sale_price>
+        {{-- g:price is the regular ("was") price; g:sale_price what a buyer is actually charged — a
+             vendor compare_price discount or a live admin homepage deal (Product::$original_price). --}}
+        <g:price>{{ number_format(($product->original_price ?? $product->effective_price) / 100, 2, '.', '') }} NGN</g:price>
+        @if($product->original_price)
+        <g:sale_price>{{ number_format($product->effective_price / 100, 2, '.', '') }} NGN</g:sale_price>
         @endif
         <g:condition>new</g:condition>
         <g:brand>{{ $product->vendor?->store?->name ?? $product->vendor?->business_name ?? config('app.name') }}</g:brand>

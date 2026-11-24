@@ -3,17 +3,21 @@
 namespace App\Services\Checkout;
 
 use App\Models\Cart;
+use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\User;
 use App\Notifications\OrderConfirmed;
 use App\Notifications\PaymentFailed;
 use App\Notifications\VendorNewOrderReceived;
 use App\Services\Commission\CommissionService;
 use App\Services\Coupon\CouponService;
+use App\Services\Korapay\KorapayRequestException;
 use App\Services\Korapay\KorapayService;
 use App\Services\Ledger\LedgerService;
 use App\Services\Pricing\TieredPricingService;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -224,13 +228,22 @@ class CheckoutService
         // (with stock already deducted) should not sit behind open row locks while we wait on it.
         // The buyer is redirected synchronously to Korapay's hosted page, so this one call can't be
         // queued like the rest of the Korapay integration — it blocks the response by necessity.
-        $charge = $this->korapay->initializeCharge(
-            reference: $order->payment_reference,
-            amountNaira: $order->total / 100,
-            customerEmail: $user->email,
-            customerName: $user->name,
-            redirectUrl: $redirectUrl,
-        );
+        try {
+            $charge = $this->korapay->initializeCharge(
+                reference: $order->payment_reference,
+                amountNaira: $order->total / 100,
+                customerEmail: $user->email,
+                customerName: $user->name,
+                redirectUrl: $redirectUrl,
+            );
+        } catch (KorapayRequestException|ConnectionException $e) {
+            // The buyer never reached a payment page, so this order can never be paid — undo it
+            // completely rather than leaving them with an empty cart and stock/coupon uses tied
+            // up in an orphaned pending order. The caller shows a "try again" error.
+            $this->abandonUnstartedOrder($order, $cart);
+
+            throw $e;
+        }
 
         return [
             'order' => $order,
@@ -292,6 +305,42 @@ class CheckoutService
                 }
             }
         }
+    }
+
+    /**
+     * Reverses everything checkout() committed for an order whose payment could not even be
+     * started: restores stock, gives back coupon uses, puts the lines back in the buyer's cart,
+     * and deletes the order (vendor orders, items, status history and coupon usages cascade).
+     */
+    private function abandonUnstartedOrder(Order $order, Cart $cart): void
+    {
+        DB::transaction(function () use ($order, $cart) {
+            $order->load('vendorOrders.items');
+
+            foreach ($order->vendorOrders as $vendorOrder) {
+                foreach ($vendorOrder->items as $item) {
+                    if ($item->product_variant_id) {
+                        ProductVariant::whereKey($item->product_variant_id)->increment('stock', $item->quantity);
+                    } else {
+                        Product::whereKey($item->product_id)->increment('stock', $item->quantity);
+                    }
+
+                    $cart->items()->create([
+                        'product_id' => $item->product_id,
+                        'product_variant_id' => $item->product_variant_id,
+                        'vendor_id' => $vendorOrder->vendor_id,
+                        'quantity' => $item->quantity,
+                        'unit_price' => $item->unit_price,
+                    ]);
+                }
+
+                if ($vendorOrder->coupon_id) {
+                    Coupon::whereKey($vendorOrder->coupon_id)->where('used_count', '>', 0)->decrement('used_count');
+                }
+            }
+
+            $order->delete();
+        });
     }
 
     private function deductStock($item): void

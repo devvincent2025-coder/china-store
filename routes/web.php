@@ -55,6 +55,7 @@ Route::get('/feeds/google-merchant.xml', GoogleMerchantFeedController::class)->n
 
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
+Route::get('/products/{product:slug}/quick-view', [ProductController::class, 'quickView'])->name('products.quick-view');
 Route::post('/search/image', ImageSearchController::class)->name('search.image');
 Route::get('/search/suggestions', SearchSuggestionController::class)->name('search.suggestions');
 

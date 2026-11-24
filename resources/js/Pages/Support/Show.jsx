@@ -21,7 +21,7 @@ export default function Show({ ticket, vendor }) {
         <Layout {...layoutProps}>
             <Head title={ticket.subject} />
 
-            <div className={auth?.isVendor ? 'max-w-2xl' : 'mx-auto max-w-2xl px-4 py-6 sm:px-6 lg:px-8'}>
+            <div className={auth?.isVendor ? 'max-w-2xl' : 'mx-auto max-w-marketplace px-4 py-6 sm:px-6 lg:px-8'}>
                 <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
                     <div>
                         <h1 className="text-xl font-bold text-neutral-900">{ticket.subject}</h1>

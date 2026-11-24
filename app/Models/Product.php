@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Pricing\DealPricing;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -35,7 +36,7 @@ class Product extends Model
         'flagged_reason',
     ];
 
-    protected $appends = ['discount_percentage', 'min_order_quantity'];
+    protected $appends = ['discount_percentage', 'min_order_quantity', 'deal_price', 'effective_price', 'original_price'];
 
     protected function casts(): array
     {
@@ -173,11 +174,46 @@ class Product extends Model
      */
     public function getDiscountPercentageAttribute(): int
     {
-        if (! $this->compare_price || $this->compare_price <= $this->price) {
+        $reference = $this->original_price;
+
+        if (! $reference || $reference <= $this->effective_price) {
             return 0;
         }
 
-        return (int) round((($this->compare_price - $this->price) / $this->compare_price) * 100);
+        return (int) round((($reference - $this->effective_price) / $reference) * 100);
+    }
+
+    /**
+     * Admin-set homepage deal price (kobo) currently live for this product, or null — only when
+     * it's actually below the normal price. See App\Services\Pricing\DealPricing.
+     */
+    public function getDealPriceAttribute(): ?int
+    {
+        $deal = app(DealPricing::class)->dealPriceFor((int) $this->id);
+
+        return $deal !== null && $deal < $this->price ? $deal : null;
+    }
+
+    /** What a buyer pays per unit right now (before bulk tiers): the deal price, else price. */
+    public function getEffectivePriceAttribute(): int
+    {
+        return $this->deal_price ?? (int) $this->price;
+    }
+
+    /**
+     * The "was" price to strike through next to effective_price: the vendor's compare_price when
+     * higher, otherwise the normal price while a deal is live. Null when there's no discount.
+     */
+    public function getOriginalPriceAttribute(): ?int
+    {
+        $candidates = array_filter([
+            $this->compare_price,
+            $this->deal_price !== null ? (int) $this->price : null,
+        ]);
+
+        $original = $candidates ? max($candidates) : null;
+
+        return $original !== null && $original > $this->effective_price ? (int) $original : null;
     }
 
     /**

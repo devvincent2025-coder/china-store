@@ -43,6 +43,8 @@ class AdminSubRolesSeeder extends Seeder
             'view_any_ad_campaign', 'view_ad_campaign', 'update_ad_campaign',
             'view_any_banner', 'create_banner', 'update_banner', 'delete_banner',
             'view_any_coupon', 'create_coupon', 'update_coupon', 'delete_coupon',
+            // Homepage merchandising: sections, featured products and their deal prices.
+            'view_any_home_section', 'create_home_section', 'update_home_section', 'delete_home_section',
         ],
         'KYC Admin' => [
             'access_admin_panel',

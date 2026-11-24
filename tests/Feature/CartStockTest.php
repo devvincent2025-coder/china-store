@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Cart;
 use App\Models\Product;
+use App\Models\ProductOption;
 use App\Models\ProductVariant;
 use App\Models\User;
 use App\Models\Vendor;
@@ -39,6 +40,21 @@ class CartStockTest extends TestCase
         ])->assertSessionHasNoErrors()->assertRedirect();
 
         $this->assertDatabaseHas('cart_items', ['product_variant_id' => $variant->id, 'quantity' => 2]);
+    }
+
+    public function test_quick_add_without_variant_redirects_to_product_page_for_products_with_options(): void
+    {
+        // Logged in: a guest cart rides on a cookie the test client doesn't carry between requests.
+        $this->actingAs(User::factory()->create());
+        $product = $this->product(['stock' => 10]);
+        ProductOption::create(['product_id' => $product->id, 'name' => ['en' => 'Size'], 'sort_order' => 0]);
+
+        // What a product card's "Add to Cart" sends — no variant, since it can't pick one.
+        $this->post(route('cart.store'), ['product_id' => $product->id, 'quantity' => 1])
+            ->assertRedirect(route('products.show', $product->slug))
+            ->assertSessionHas('warning');
+
+        $this->assertDatabaseCount('cart_items', 0);
     }
 
     public function test_cannot_add_more_than_available_stock(): void

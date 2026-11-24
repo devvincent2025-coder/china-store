@@ -19,7 +19,7 @@ export default function Index() {
         <StorefrontLayout>
             <Head title={__('Track Your Order')} />
 
-            <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-marketplace px-4 py-12 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16">
                     {/* Illustration — desktop only by design, keeps the mobile page focused on the form */}
                     <div className="hidden lg:block">

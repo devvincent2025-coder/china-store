@@ -8,9 +8,12 @@ use App\Services\Checkout\CheckoutService;
 use App\Services\Coupon\CouponService;
 use App\Services\Korapay\KorapayRequestException;
 use App\Services\Korapay\KorapayService;
+use App\Support\NigerianStates;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -43,37 +46,46 @@ class CheckoutController extends Controller
     {
         $cart = $request->user()->cart;
         $stagedCoupons = $request->session()->get(self::SESSION_KEY, []);
+        // Coupons that stopped qualifying since they were applied (e.g. the cart dropped below the
+        // minimum spend) — surfaced to the buyer as a warning instead of vanishing silently.
+        $couponNotices = [];
+
+        $itemsByVendor = $cart?->itemsGroupedByVendor()->map(function ($items) use ($request, $stagedCoupons, &$couponNotices) {
+            $vendor = $items->first()->vendor;
+            $originalSubtotal = $items->sum(fn ($item) => $item->original_unit_price * $item->quantity);
+            $subtotal = $items->sum(fn ($item) => $item->unit_price * $item->quantity);
+
+            [$discount, $appliedCode, $notice] = $this->resolveStagedDiscount(
+                $request,
+                $vendor->id,
+                $subtotal,
+                $items->pluck('product_id')->all(),
+                $stagedCoupons,
+            );
+            if ($notice) {
+                $couponNotices[] = $notice;
+            }
+
+            $afterDiscount = $subtotal - $discount;
+            $vatAmount = $vendor->calculateVat($afterDiscount);
+            $shippingAmount = $vendor->calculateShippingFee($afterDiscount);
+
+            return [
+                'vendor' => $vendor->load('store'),
+                'items' => $items,
+                'original_subtotal' => $originalSubtotal,
+                'subtotal' => $subtotal,
+                'discount' => $discount,
+                'applied_coupon_code' => $appliedCode,
+                'vat_amount' => $vatAmount,
+                'shipping_amount' => $shippingAmount,
+                'total' => $afterDiscount + $vatAmount + $shippingAmount,
+            ];
+        })->values() ?? [];
 
         return Inertia::render('Checkout/Index', [
-            'itemsByVendor' => $cart?->itemsGroupedByVendor()->map(function ($items) use ($request, $stagedCoupons) {
-                $vendor = $items->first()->vendor;
-                $originalSubtotal = $items->sum(fn ($item) => $item->original_unit_price * $item->quantity);
-                $subtotal = $items->sum(fn ($item) => $item->unit_price * $item->quantity);
-
-                [$discount, $appliedCode] = $this->resolveStagedDiscount(
-                    $request,
-                    $vendor->id,
-                    $subtotal,
-                    $items->pluck('product_id')->all(),
-                    $stagedCoupons,
-                );
-
-                $afterDiscount = $subtotal - $discount;
-                $vatAmount = $vendor->calculateVat($afterDiscount);
-                $shippingAmount = $vendor->calculateShippingFee($afterDiscount);
-
-                return [
-                    'vendor' => $vendor->load('store'),
-                    'items' => $items,
-                    'original_subtotal' => $originalSubtotal,
-                    'subtotal' => $subtotal,
-                    'discount' => $discount,
-                    'applied_coupon_code' => $appliedCode,
-                    'vat_amount' => $vatAmount,
-                    'shipping_amount' => $shippingAmount,
-                    'total' => $afterDiscount + $vatAmount + $shippingAmount,
-                ];
-            })->values() ?? [],
+            'itemsByVendor' => $itemsByVendor,
+            'couponNotices' => $couponNotices,
             // The buyer's full address book (see ShippingAddress) — Checkout/Index.jsx lets them
             // pick any saved address or add a new one, rather than being limited to a single
             // overwritable "default" the way the old Profile-page address field worked.
@@ -106,7 +118,7 @@ class CheckoutController extends Controller
         $subtotal = $items->sum(fn ($item) => $item->unit_price * $item->quantity);
 
         try {
-            $this->couponService->validateForVendorGroup(
+            $coupon = $this->couponService->validateForVendorGroup(
                 code: $validated['code'],
                 vendorId: $validated['vendor_id'],
                 subtotalKobo: $subtotal,
@@ -120,19 +132,23 @@ class CheckoutController extends Controller
         }
 
         $coupons = $request->session()->get(self::SESSION_KEY, []);
-        $coupons[$validated['vendor_id']] = $validated['code'];
+        // Stage the canonical code (not whatever casing the buyer typed).
+        $coupons[$validated['vendor_id']] = $coupon->code;
         $request->session()->put(self::SESSION_KEY, $coupons);
 
-        return back()->with('success', 'Coupon applied.');
+        $saving = number_format($coupon->calculateDiscount($subtotal) / 100, 2);
+
+        return back()->with('success', "Coupon {$coupon->code} applied — you save ₦{$saving}.");
     }
 
     public function removeCoupon(Request $request, int $vendorId): RedirectResponse
     {
         $coupons = $request->session()->get(self::SESSION_KEY, []);
+        $removed = $coupons[$vendorId] ?? null;
         unset($coupons[$vendorId]);
         $request->session()->put(self::SESSION_KEY, $coupons);
 
-        return back();
+        return back()->with('success', $removed ? "Coupon {$removed} removed." : 'Coupon removed.');
     }
 
     public function store(Request $request): SymfonyResponse
@@ -150,21 +166,36 @@ class CheckoutController extends Controller
         ];
 
         if (! $usingSavedAddress) {
+            // Trim everything and strip spaces/dashes/brackets from the phone number first, so
+            // "0803 123 4567" and "+234-803-123-4567" validate (and are stored) the same way.
+            $address = collect((array) $request->input('shipping_address', []))
+                ->map(fn ($value) => is_string($value) ? trim($value) : $value);
+            if (is_string($address->get('phone'))) {
+                $address->put('phone', preg_replace('/[\s\-()]/', '', $address->get('phone')));
+            }
+            $request->merge(['shipping_address' => $address->all()]);
+
             $rules += [
-                'shipping_address.name' => ['required', 'string'],
-                'shipping_address.phone' => ['required', 'string'],
-                'shipping_address.line1' => ['required', 'string'],
-                'shipping_address.city' => ['required', 'string'],
-                'shipping_address.state' => ['required', 'string'],
+                'shipping_address.name' => ['required', 'string', 'min:2', 'max:100'],
+                // Nigerian mobile: 0803…, 234803… or +234803… (11 digits locally).
+                'shipping_address.phone' => ['required', 'string', 'regex:/^(\+?234|0)[789][01]\d{8}$/'],
+                'shipping_address.line1' => ['required', 'string', 'min:5', 'max:255'],
+                'shipping_address.city' => ['required', 'string', 'min:2', 'max:80'],
+                'shipping_address.state' => ['required', 'string', Rule::in(NigerianStates::ALL)],
             ];
         }
 
         $validated = $request->validate($rules, [
             'shipping_address.name.required' => 'Full name is required.',
+            'shipping_address.name.min' => 'Please enter your full name.',
             'shipping_address.phone.required' => 'Phone number is required.',
+            'shipping_address.phone.regex' => 'Enter a valid Nigerian phone number, e.g. 08031234567.',
             'shipping_address.line1.required' => 'Address is required.',
+            'shipping_address.line1.min' => 'Please enter your full street address.',
             'shipping_address.city.required' => 'City is required.',
+            'shipping_address.city.min' => 'Please enter a valid city.',
             'shipping_address.state.required' => 'State is required.',
+            'shipping_address.state.in' => 'Please choose a state from the list.',
         ]);
 
         if ($usingSavedAddress) {
@@ -192,13 +223,22 @@ class CheckoutController extends Controller
         // discount than what they saw right before paying.
         $stagedCoupons = $request->session()->get(self::SESSION_KEY, []);
 
-        $result = $this->checkoutService->checkout(
-            user: $request->user(),
-            cart: $request->user()->cart,
-            shippingAddress: $shippingAddress,
-            couponCodesByVendorId: $stagedCoupons,
-            redirectUrl: route('checkout.callback'),
-        );
+        try {
+            $result = $this->checkoutService->checkout(
+                user: $request->user(),
+                cart: $request->user()->cart,
+                shippingAddress: $shippingAddress,
+                couponCodesByVendorId: $stagedCoupons,
+                redirectUrl: route('checkout.callback'),
+            );
+        } catch (KorapayRequestException|ConnectionException $e) {
+            // Payment couldn't be started (provider down, misconfigured keys, network). The order
+            // was already rolled back and the cart restored (CheckoutService::abandonUnstartedOrder),
+            // and staged coupons are kept — so the buyer can simply try again.
+            report($e);
+
+            return back()->with('error', __("We couldn't connect to our payment provider. Nothing was charged and your cart is unchanged — please try again in a moment."));
+        }
 
         $request->session()->forget(self::SESSION_KEY);
 
@@ -264,12 +304,16 @@ class CheckoutController extends Controller
      *
      * @return array{0: int, 1: ?string} [discountKobo, appliedCode]
      */
+    /**
+     * @return array{0: int, 1: ?string, 2: ?string} [discount kobo, applied code, notice when a
+     *                                                 staged coupon had to be dropped]
+     */
     private function resolveStagedDiscount(Request $request, int $vendorId, int $subtotalKobo, array $productIds, array $stagedCoupons): array
     {
         $code = $stagedCoupons[$vendorId] ?? null;
 
         if (! $code) {
-            return [0, null];
+            return [0, null, null];
         }
 
         try {
@@ -281,13 +325,13 @@ class CheckoutController extends Controller
                 user: $request->user(),
             );
 
-            return [$coupon->calculateDiscount($subtotalKobo), $code];
-        } catch (ValidationException) {
+            return [$coupon->calculateDiscount($subtotalKobo), $code, null];
+        } catch (ValidationException $e) {
             $coupons = $request->session()->get(self::SESSION_KEY, []);
             unset($coupons[$vendorId]);
             $request->session()->put(self::SESSION_KEY, $coupons);
 
-            return [0, null];
+            return [0, null, "Coupon {$code} was removed: ".$e->validator->errors()->first('coupon')];
         }
     }
 }

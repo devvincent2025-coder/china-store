@@ -25,7 +25,7 @@ export default function EmailPreferences({ marketingOptOut }) {
             <Head title={__('Email Preferences')} />
 
             <div className="py-12">
-                <div className="mx-auto max-w-2xl sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-marketplace sm:px-6 lg:px-8">
                     <form onSubmit={submit} className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
                         <h3 className="mb-1 text-sm font-semibold text-neutral-800">{__('Marketing emails')}</h3>
                         <p className="mb-4 text-sm text-neutral-500">

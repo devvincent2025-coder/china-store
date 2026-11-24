@@ -22,10 +22,11 @@ export default function Edit({ mustVerifyEmail, status, twoFactor, defaultShippi
         <StorefrontLayout>
             <Head title={__('My Account')} />
 
-            <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-marketplace px-4 py-8 sm:px-6 lg:px-8">
                 <h1 className="mb-6 text-xl font-bold text-neutral-900">{__('My Account')}</h1>
 
-                <div className="space-y-6">
+                {/* Two columns on desktop so each card stays a comfortable width on the wider page. */}
+                <div className="grid items-start gap-6 lg:grid-cols-2">
                     <Card>
                         <h2 className="mb-4 text-sm font-semibold text-neutral-800">{__('Profile Photo')}</h2>
                         <AvatarUploader user={user} />

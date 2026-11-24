@@ -15,7 +15,8 @@ class CouponService
 {
     public function validateForVendorGroup(string $code, ?int $vendorId, int $subtotalKobo, array $productIds, User $user): Coupon
     {
-        $coupon = Coupon::where('code', $code)->first();
+        // Case/whitespace-insensitive: "newarrival15 " finds NEWARRIVAL15.
+        $coupon = Coupon::query()->whereRaw('UPPER(code) = ?', [strtoupper(trim($code))])->first();
 
         if (! $coupon) {
             throw ValidationException::withMessages(['coupon' => 'This coupon code does not exist.']);

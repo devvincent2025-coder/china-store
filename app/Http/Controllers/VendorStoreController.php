@@ -10,7 +10,7 @@ use Inertia\Response;
 
 class VendorStoreController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $stores = VendorStore::query()
             ->with(['vendor', 'category'])
@@ -20,6 +20,12 @@ class VendorStoreController extends Controller
 
         return Inertia::render('Stores/Index', [
             'stores' => $stores,
+            'seo' => Seo::generic(
+                $request,
+                'Verified Chinese-Run Stores in Nigeria',
+                'Browse real Chinese-run vendor stores selling in Nigeria — verified sellers, Naira pricing, fast local delivery, and every order protected by escrow until you confirm you\'re happy.',
+                ['chinese stores in nigeria', 'chinese vendors nigeria', 'chinese sellers nigeria', 'verified chinese stores', 'buy from chinese vendors nigeria']
+            ),
         ]);
     }
 

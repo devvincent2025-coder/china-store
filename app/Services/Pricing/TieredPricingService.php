@@ -46,13 +46,22 @@ class TieredPricingService
         $tiers = self::tiersFor($product, $variant);
 
         if ($tiers->isEmpty()) {
-            return $variant?->final_price ?? $product->price;
+            return $variant?->final_price ?? $product->effective_price;
         }
 
         $tier = $tiers->first(
             fn ($tier) => $quantity >= $tier->min_quantity && ($tier->max_quantity === null || $quantity <= $tier->max_quantity)
         );
 
-        return $tier?->price_kobo;
+        if ($tier === null) {
+            return null;
+        }
+
+        // A live homepage deal (see DealPricing) also caps tier prices — the buyer pays whichever
+        // is lower — but only where the deal applies: the product itself, or a variant that
+        // inherits the base price. Explicitly-priced variants are never discounted.
+        $deal = ($variant === null || $variant->price === null) ? $product->deal_price : null;
+
+        return $deal !== null ? min($tier->price_kobo, $deal) : $tier->price_kobo;
     }
 }

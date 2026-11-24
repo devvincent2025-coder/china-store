@@ -11,6 +11,9 @@ use Illuminate\Database\Seeder;
 /**
  * Homepage hero carousel: promotional slides for new arrivals, coupon codes, and category
  * deals — not random stock photos. Also seeds 1–2 store banners per vendor.
+ *
+ * Homepage slides use curated, high-resolution images bundled in public/images/banners/
+ * (Unsplash License — free for commercial use; source photo noted next to each).
  */
 class BannerSeeder extends Seeder
 {
@@ -29,8 +32,7 @@ class BannerSeeder extends Seeder
                     'zh' => '本周新品到货',
                     'fr' => 'Nouveautés — Arrivages de la semaine',
                 ],
-                'query' => 'shopping mall retail products shelves',
-                'fallback' => 'department store products',
+                'image' => '/images/banners/new-arrivals.jpg', // unsplash.com/photos/P3pI6xzovu0
                 'link_url' => '/products',
             ],
             [
@@ -43,8 +45,7 @@ class BannerSeeder extends Seeder
                         ? "Économisez {$welcome->value}% avec le code {$welcome->code}"
                         : 'Offre de bienvenue',
                 ],
-                'query' => 'retail sale discount shopping bags',
-                'fallback' => 'shopping sale promotion',
+                'image' => '/images/banners/welcome-offer.jpg', // unsplash.com/photos/BQ9usyzHx_w
                 'link_url' => '/products',
             ],
             [
@@ -53,8 +54,7 @@ class BannerSeeder extends Seeder
                     'zh' => '认证商家电子产品特惠',
                     'fr' => 'Promos électronique de vendeurs vérifiés',
                 ],
-                'query' => 'smartphone laptop headphones electronics',
-                'fallback' => 'consumer electronics display',
+                'image' => '/images/banners/electronics-deals.jpg', // unsplash.com/photos/MP56QwyNC8c
                 'link_url' => '/categories/electronics',
             ],
             [
@@ -67,8 +67,7 @@ class BannerSeeder extends Seeder
                         ? "Vente flash — code {$flash->code}"
                         : 'Vente flash',
                 ],
-                'query' => 'black friday shopping cart sale',
-                'fallback' => 'shopping bags sale',
+                'image' => '/images/banners/flash-sale.jpg', // unsplash.com/photos/Wt33T42JNCM
                 'link_url' => '/products',
             ],
             [
@@ -81,8 +80,7 @@ class BannerSeeder extends Seeder
                         ? "Mode nouveautés — {$newArrival->value}% avec {$newArrival->code}"
                         : 'Nouveautés mode',
                 ],
-                'query' => 'fashion clothing boutique display',
-                'fallback' => 'fashion store mannequin',
+                'image' => '/images/banners/fashion-new-in.jpg', // unsplash.com/photos/qnKhZJPKFD8
                 'link_url' => '/categories/fashion',
             ],
         ];
@@ -94,7 +92,7 @@ class BannerSeeder extends Seeder
                 ['vendor_id' => null, 'sort_order' => $index, 'placement' => 'homepage'],
                 [
                     'title' => $banner['title'],
-                    'image_url' => $images->findWide($banner['query'], $index, $banner['fallback']),
+                    'image_url' => $banner['image'],
                     'link_url' => $banner['link_url'],
                     'is_active' => true,
                     'starts_at' => now()->subDay(),

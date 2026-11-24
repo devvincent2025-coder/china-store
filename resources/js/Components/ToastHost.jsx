@@ -1,5 +1,5 @@
 import { usePage } from '@inertiajs/react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 const ICONS = {
     success: (
@@ -31,31 +31,29 @@ const ACCENT = {
     warning: 'bg-amber-500',
 };
 
+const TOAST_EVENT = 'cin:toast';
+
 /**
- * Global toast host — reads Inertia flash.success / flash.error / flash.warning,
- * animates in at the top-right, and auto-dismisses after 3 seconds.
+ * Show a toast from client-side code (e.g. an XHR error that never produced a session flash).
+ * Usage: showToast('error', 'Only 2 left in stock.')
+ */
+export function showToast(type, message) {
+    if (typeof window === 'undefined' || !message) return;
+    window.dispatchEvent(new CustomEvent(TOAST_EVENT, { detail: { type, message: String(message) } }));
+}
+
+/**
+ * Global toast host — reads Inertia flash.success / flash.error / flash.warning (and client
+ * `showToast()` events), animates in at the top-right, and auto-dismisses after 3 seconds.
  */
 export default function ToastHost() {
     const { flash } = usePage().props;
     const [toasts, setToasts] = useState([]);
     const seenRef = useRef(null);
+    const timersRef = useRef([]);
 
-    useEffect(() => {
-        if (!flash?.success && !flash?.error && !flash?.warning) {
-            seenRef.current = null;
-            return undefined;
-        }
-
-        const next = [];
-        if (flash?.success) next.push({ type: 'success', message: String(flash.success) });
-        if (flash?.error) next.push({ type: 'error', message: String(flash.error) });
-        if (flash?.warning) next.push({ type: 'warning', message: String(flash.warning) });
-
-        const token = `${flash.success}|${flash.error}|${flash.warning}`;
-        if (seenRef.current === token) return undefined;
-        seenRef.current = token;
-
-        const created = next.map((t) => ({
+    const push = useCallback((items) => {
+        const created = items.map((t) => ({
             ...t,
             id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
             leaving: false,
@@ -63,17 +61,43 @@ export default function ToastHost() {
 
         setToasts((prev) => [...prev, ...created]);
 
-        const timers = created.map((toast) =>
-            setTimeout(() => {
-                setToasts((prev) => prev.map((t) => (t.id === toast.id ? { ...t, leaving: true } : t)));
+        created.forEach((toast) => {
+            timersRef.current.push(
                 setTimeout(() => {
-                    setToasts((prev) => prev.filter((t) => t.id !== toast.id));
-                }, 320);
-            }, 3000),
-        );
+                    setToasts((prev) => prev.map((t) => (t.id === toast.id ? { ...t, leaving: true } : t)));
+                    timersRef.current.push(
+                        setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== toast.id)), 320),
+                    );
+                }, 3000),
+            );
+        });
+    }, []);
 
-        return () => timers.forEach(clearTimeout);
-    }, [flash?.success, flash?.error, flash?.warning]);
+    useEffect(() => () => timersRef.current.forEach(clearTimeout), []);
+
+    useEffect(() => {
+        const onToast = (e) => {
+            const { type = 'success', message } = e.detail ?? {};
+            if (message && STYLES[type]) push([{ type, message }]);
+        };
+        window.addEventListener(TOAST_EVENT, onToast);
+        return () => window.removeEventListener(TOAST_EVENT, onToast);
+    }, [push]);
+
+    // Keyed on the flash object itself, not its text: every server response builds a fresh
+    // `flash`, so adding two items in a row ("Added to cart." twice) still toasts twice, while
+    // re-renders and partial reloads that don't touch `flash` keep the same reference and don't.
+    useEffect(() => {
+        if (!flash || seenRef.current === flash) return;
+        seenRef.current = flash;
+
+        const next = [];
+        if (flash.success) next.push({ type: 'success', message: String(flash.success) });
+        if (flash.error) next.push({ type: 'error', message: String(flash.error) });
+        if (flash.warning) next.push({ type: 'warning', message: String(flash.warning) });
+
+        if (next.length) push(next);
+    }, [flash, push]);
 
     const dismiss = (id) => {
         setToasts((prev) => prev.map((t) => (t.id === id ? { ...t, leaving: true } : t)));

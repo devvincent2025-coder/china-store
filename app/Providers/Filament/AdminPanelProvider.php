@@ -81,6 +81,7 @@ class AdminPanelProvider extends PanelProvider
                         .fi-sidebar-item a[href*="/admin/products"] svg { color: #2563eb; }
                         .fi-sidebar-item a[href*="/admin/categories"] svg { color: #7c3aed; }
                         .fi-sidebar-item a[href*="/admin/banners"] svg { color: #9333ea; }
+                        .fi-sidebar-item a[href*="/admin/home-sections"] svg { color: #FF5000; }
                         .fi-sidebar-item a[href*="/admin/coupons"] svg { color: #db2777; }
                         .fi-sidebar-item a[href*="/admin/reviews"] svg { color: #f59e0b; }
                         .fi-sidebar-item a[href*="/admin/support-tickets"] svg { color: #d97706; }

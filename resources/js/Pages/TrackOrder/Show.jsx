@@ -14,7 +14,7 @@ export default function Show({ order }) {
         <StorefrontLayout>
             <Head title={`${__('Track Order')} ${order.order_number}`} />
 
-            <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-marketplace px-4 py-6 sm:px-6 lg:px-8">
                 <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
                     <h1 className="text-xl font-bold text-neutral-900">{__('Order')} {order.order_number}</h1>
                     <StatusBadge status={order.payment_status} />

@@ -71,7 +71,9 @@ class ProductVariant extends Model
      */
     public function getFinalPriceAttribute(): int
     {
-        return $this->price ?? $this->product->price;
+        // Inherits the parent's EFFECTIVE price, so a live homepage deal (DealPricing) applies to
+        // variants without their own price; explicitly-priced variants are never discounted.
+        return $this->price ?? $this->product->effective_price;
     }
 
     public function getDisplayImageAttribute(): ?string

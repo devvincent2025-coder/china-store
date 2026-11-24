@@ -110,7 +110,7 @@ export default function Index({ products, categories, stores = [], cities = [], 
     ].filter(Boolean).length;
 
     return (
-        <StorefrontLayout categories={categories} showCategoryBar>
+        <StorefrontLayout categories={categories} showCategoryBar={false}>
             <SeoHead seo={seo} />
 
             <div className="mx-auto max-w-marketplace px-2 py-6 sm:px-3">
@@ -121,7 +121,7 @@ export default function Index({ products, categories, stores = [], cities = [], 
                                 ? __('Image search results')
                                 : filters?.q
                                     ? __('Results for ":term"', { term: filters.q })
-                                    : __('All Products')}
+                                    : __('')}
                         </h1>
                         <p className="mt-1 font-ui text-sm text-tb-muted">
                             {__(':count items', { count: products.total ?? products.data?.length ?? 0 })}

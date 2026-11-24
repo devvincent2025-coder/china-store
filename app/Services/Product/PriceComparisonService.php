@@ -118,15 +118,16 @@ class PriceComparisonService
                     $reviewCountCache[$vendor->id] = Review::where('vendor_id', $vendor->id)->count();
                 }
 
+                // effective_price includes a live admin homepage deal (see DealPricing).
                 $price = $product->variants->isNotEmpty()
-                    ? $product->variants->min(fn ($v) => $v->price ?? $product->price)
-                    : $product->price;
+                    ? $product->variants->min(fn ($v) => $v->price ?? $product->effective_price)
+                    : $product->effective_price;
 
                 return [
                     'product_id' => $product->id,
                     'product_slug' => $product->slug,
                     'price' => $price,
-                    'compare_price' => $product->compare_price,
+                    'compare_price' => $product->original_price ?? $product->compare_price,
                     'in_stock' => $product->isInStock(),
                     'vendor' => [
                         'id' => $vendor->id,

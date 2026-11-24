@@ -9,6 +9,7 @@ use App\Services\Ads\AdCampaignService;
 use App\Services\Cart\CartResolver;
 use App\Services\Product\PriceComparisonService;
 use App\Support\Seo\Seo;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -143,6 +144,40 @@ class ProductController extends Controller
         ]);
     }
 
+    /**
+     * Lightweight JSON for a product card's "Add to Cart": the options/variants/tiers needed to
+     * either add straight away (no options) or render the variant-picker modal. Same visibility
+     * rule as every listing, so a card can't quick-add something it shouldn't have shown.
+     */
+    public function quickView(Product $product): JsonResponse
+    {
+        abort_unless(Product::query()->publiclyListed()->whereKey($product->id)->exists(), 404);
+
+        $product->load(['images', 'variants.optionValues', 'variants.priceTiers', 'options.values', 'priceTiers']);
+        // Same N+1 guard as show(): variant final_price falls back to the parent's price.
+        $product->variants->each(fn ($variant) => $variant->setRelation('product', $product)->makeHidden('product'));
+
+        return response()->json([
+            'product' => [
+                'id' => $product->id,
+                'slug' => $product->slug,
+                'title' => $product->getTranslations('title'),
+                'price' => $product->price,
+                'compare_price' => $product->compare_price,
+                'deal_price' => $product->deal_price,
+                'effective_price' => $product->effective_price,
+                'original_price' => $product->original_price,
+                'stock' => $product->stock,
+                'discount_percentage' => $product->discount_percentage,
+                'min_order_quantity' => $product->min_order_quantity,
+                'images' => $product->images,
+                'options' => $product->options,
+                'variants' => $product->variants,
+                'price_tiers' => $product->priceTiers,
+            ],
+        ]);
+    }
+
     public function show(Request $request, Product $product, PriceComparisonService $comparisons, CartResolver $carts): Response
     {
         abort_unless($product->status === 'published', 404);
@@ -153,7 +188,7 @@ class ProductController extends Controller
         // Avoids an N+1 query per variant: ProductVariant::getFinalPriceAttribute() falls back to
         // $this->product->price when the variant has no price of its own, which would otherwise
         // lazy-load the parent product fresh for every variant during JSON serialization below.
-        $product->variants->each(fn ($variant) => $variant->setRelation('product', $product));
+        $product->variants->each(fn ($variant) => $variant->setRelation('product', $product)->makeHidden('product'));
 
         $relatedProducts = Product::query()
             ->publiclyListed()

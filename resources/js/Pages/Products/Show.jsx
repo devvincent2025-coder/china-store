@@ -7,12 +7,15 @@ import ProductCard from '@/Components/ProductCard';
 import PriceTag from '@/Components/PriceTag';
 import StarRating from '@/Components/StarRating';
 import InputError from '@/Components/InputError';
+import ImageLightbox from '@/Components/ImageLightbox';
+import VariantOptions from '@/Components/VariantOptions';
 import { t } from '@/utils/translatable';
 import { useTranslation } from '@/hooks/useTranslation';
-import { isColorOption, resolveColorSwatch } from '@/utils/colorSwatch';
 import { formatNaira } from '@/utils/money';
 import { minOrderQuantity, resolveTierPrice } from '@/utils/tieredPricing';
 import { formatDeliveryEstimate } from '@/utils/deliveryEstimate';
+import { defaultSelection, resolveVariant } from '@/utils/variants';
+import { priceOf, wasPriceOf } from '@/utils/productPrice';
 
 function ReportProductButton({ product }) {
     const { __ } = useTranslation();
@@ -88,37 +91,6 @@ function ReportProductButton({ product }) {
 // depth for the same allowlist, not the primary sanitization pass.
 const DESCRIPTION_TAGS = ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'ul', 'ol', 'li'];
 
-/**
- * Given the buyer's current { [optionId]: selectedValueId } selection and the product's full
- * variant list, finds the variant whose optionValues set exactly matches the selection.
- */
-function resolveVariant(variants, options, selection) {
-    if (!options || options.length === 0) return null;
-
-    const selectedIds = options.map((opt) => selection[opt.id]).filter((id) => id != null);
-    if (selectedIds.length !== options.length) return null;
-
-    return (
-        variants.find((variant) => {
-            // Eloquent serializes relation keys as snake_case regardless of the PHP method's
-            // camelCase name, so the loaded `optionValues` relation arrives as `option_values`.
-            const variantIds = variant.option_values.map((ov) => ov.id);
-            if (variantIds.length !== selectedIds.length) return false;
-            return selectedIds.every((id) => variantIds.includes(id));
-        }) ?? null
-    );
-}
-
-function defaultSelection(options) {
-    const selection = {};
-    (options ?? []).forEach((option) => {
-        if (option.values?.length > 0) {
-            selection[option.id] = option.values[0].id;
-        }
-    });
-    return selection;
-}
-
 function CouponStrip({ coupons }) {
     const { __ } = useTranslation();
 
@@ -148,6 +120,9 @@ export default function Show({ product, relatedProducts, otherSellers = [], coup
     const [updatingCart, setUpdatingCart] = useState(false);
     const images = product.images ?? [];
     const [activeImage, setActiveImage] = useState(0);
+    const [lightboxOpen, setLightboxOpen] = useState(false);
+    // Desktop hover-magnifier: transform-origin follows the cursor over the main image.
+    const [zoomOrigin, setZoomOrigin] = useState(null);
     const options = product.options ?? [];
     const variants = product.variants ?? [];
     const [selection, setSelection] = useState(() => defaultSelection(options));
@@ -184,7 +159,9 @@ export default function Show({ product, relatedProducts, otherSellers = [], coup
         post(route('cart.store'));
     };
 
-    const basePrice = variant ? variant.final_price : product.price;
+    // final_price / effective_price already include a live admin homepage deal (DealPricing).
+    const basePrice = variant ? variant.final_price : priceOf(product);
+    const wasPrice = variant?.price != null ? product.compare_price : wasPriceOf(product);
     const tieredPrice = resolveTierPrice(activeTiers, data.quantity, basePrice);
     const displayPrice = tieredPrice ?? activeTiers[0]?.price_kobo ?? basePrice;
     const availableStock = options.length > 0 ? (variant ? variant.stock : 0) : product.stock;
@@ -222,9 +199,9 @@ export default function Show({ product, relatedProducts, otherSellers = [], coup
         setSelection((prev) => ({ ...prev, [optionId]: valueId }));
     };
 
-    const activeImageUrl = images[activeImage]
-        ? (images[activeImage].enhanced_url ?? images[activeImage].original_url)
-        : null;
+    const imageUrls = images.map((img) => img.enhanced_url ?? img.original_url);
+    const activeImageUrl = imageUrls[activeImage] ?? null;
+    const stepImage = (dir) => setActiveImage((i) => (i + dir + images.length) % images.length);
 
     const description = t(product.description);
     const descriptionHtml = useMemo(
@@ -244,36 +221,116 @@ export default function Show({ product, relatedProducts, otherSellers = [], coup
         <StorefrontLayout>
             <SeoHead seo={seo} />
 
-            <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-[1520px] px-4 py-6 sm:px-6 lg:px-8">
+                {/* One white card: gallery + product details + reviews */}
+                <div className="rounded-3xl bg-white p-4 sm:p-6 lg:p-8">
                 <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
                     {/* Gallery */}
-                    <div>
-                        <div className="aspect-square w-full overflow-hidden rounded-lg border border-neutral-200 bg-neutral-100">
+                    <div className="lg:sticky lg:top-28 lg:self-start">
+                        <div className="group/gallery relative aspect-square w-full overflow-hidden rounded-2xl bg-neutral-50">
                             {activeImageUrl ? (
-                                <img src={activeImageUrl} alt={t(product.title)} className="h-full w-full object-cover" />
+                                <button
+                                    type="button"
+                                    onClick={() => setLightboxOpen(true)}
+                                    onMouseMove={(e) => {
+                                        const r = e.currentTarget.getBoundingClientRect();
+                                        setZoomOrigin(`${((e.clientX - r.left) / r.width) * 100}% ${((e.clientY - r.top) / r.height) * 100}%`);
+                                    }}
+                                    onMouseLeave={() => setZoomOrigin(null)}
+                                    className="block h-full w-full cursor-zoom-in overflow-hidden"
+                                    aria-label={__('View image full screen')}
+                                >
+                                    <img
+                                        src={activeImageUrl}
+                                        alt={t(product.title)}
+                                        className="h-full w-full object-cover transition-transform duration-200 ease-out"
+                                        style={zoomOrigin ? { transform: 'scale(1.8)', transformOrigin: zoomOrigin } : undefined}
+                                        draggable={false}
+                                    />
+                                </button>
                             ) : (
-                                <div className="flex h-full items-center justify-center text-neutral-300">No image</div>
+                                <div className="flex h-full items-center justify-center text-neutral-300">{__('No image')}</div>
+                            )}
+
+                            {activeImageUrl && (
+                                <button
+                                    type="button"
+                                    onClick={() => setLightboxOpen(true)}
+                                    className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-tb-ink shadow-soft transition hover:bg-white hover:text-tb"
+                                    aria-label={__('View image full screen')}
+                                    title={__('View image full screen')}
+                                >
+                                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4" />
+                                    </svg>
+                                </button>
+                            )}
+
+                            {images.length > 1 && (
+                                <>
+                                    {[-1, 1].map((dir) => (
+                                        <button
+                                            key={dir}
+                                            type="button"
+                                            onClick={() => stepImage(dir)}
+                                            aria-label={dir < 0 ? __('Previous image') : __('Next image')}
+                                            className={`absolute top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-tb-ink shadow-soft transition hover:bg-white hover:text-tb sm:opacity-0 sm:group-hover/gallery:opacity-100 ${
+                                                dir < 0 ? 'left-3' : 'right-3'
+                                            }`}
+                                        >
+                                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d={dir < 0 ? 'M15 19l-7-7 7-7' : 'M9 5l7 7-7 7'} />
+                                            </svg>
+                                        </button>
+                                    ))}
+                                    <span className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-black/55 px-2.5 py-1 font-display text-[11px] font-semibold tabular-nums text-white">
+                                        {activeImage + 1} / {images.length}
+                                    </span>
+                                </>
+                            )}
+
+                            {activeImageUrl && (
+                                <span className="pointer-events-none absolute bottom-3 right-3 hidden items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-tb-ink shadow-sm transition-opacity group-hover/gallery:opacity-0 sm:inline-flex">
+                                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="11" cy="11" r="7" strokeWidth={2} /><path strokeLinecap="round" strokeWidth={2} d="M8 11h6M11 8v6M20 20l-3.5-3.5" /></svg>
+                                    {__('Hover to zoom · click to expand')}
+                                </span>
                             )}
                         </div>
+
                         {images.length > 1 && (
-                            <div className="mt-3 flex gap-2 overflow-x-auto">
+                            <div className="no-scrollbar mt-3 flex gap-2.5 overflow-x-auto p-1">
                                 {images.map((img, i) => (
                                     <button
                                         key={img.id}
+                                        type="button"
                                         onClick={() => setActiveImage(i)}
-                                        className={`h-16 w-16 shrink-0 overflow-hidden rounded-md border-2 ${
-                                            i === activeImage ? 'border-orange-600' : 'border-neutral-200'
+                                        onDoubleClick={() => {
+                                            setActiveImage(i);
+                                            setLightboxOpen(true);
+                                        }}
+                                        aria-label={`${__('Image')} ${i + 1}`}
+                                        className={`h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-neutral-50 transition sm:h-20 sm:w-20 ${
+                                            i === activeImage ? 'ring-2 ring-tb ring-offset-2' : 'opacity-70 hover:opacity-100'
                                         }`}
                                     >
-                                        <img src={img.enhanced_url ?? img.original_url} alt="" className="h-full w-full object-cover" />
+                                        <img src={imageUrls[i]} alt="" className="h-full w-full object-cover" />
                                     </button>
                                 ))}
                             </div>
                         )}
+
+                        <ImageLightbox
+                            images={imageUrls}
+                            index={activeImage}
+                            open={lightboxOpen}
+                            alt={t(product.title)}
+                            onClose={() => setLightboxOpen(false)}
+                            onIndexChange={setActiveImage}
+                        />
                     </div>
 
                     {/* Details */}
-                    <div>
+                    <div className="min-w-0">
                         <h1 className="text-xl font-bold text-neutral-900 sm:text-2xl">{t(product.title)}</h1>
 
                         <div className="mt-2 flex items-center gap-3">
@@ -281,13 +338,13 @@ export default function Show({ product, relatedProducts, otherSellers = [], coup
                         </div>
 
                         <div className="mt-4 rounded-lg bg-orange-50 p-4">
-                            <PriceTag kobo={displayPrice} comparePriceKobo={product.compare_price} size="xl" />
+                            <PriceTag kobo={displayPrice} comparePriceKobo={wasPrice} size="xl" />
                         </div>
 
                         {product.vendor?.store && (
                             <Link
                                 href={route('vendors.show', product.vendor.store.slug)}
-                                className="mt-4 flex items-center gap-3 rounded-lg border border-neutral-200 p-3 hover:border-orange-300"
+                                className="mt-4 flex items-center gap-3 rounded-2xl bg-neutral-50 p-3 transition hover:bg-tb-soft"
                             >
                                 <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-neutral-100">
                                     {product.vendor.store.logo_url && (
@@ -311,66 +368,11 @@ export default function Show({ product, relatedProducts, otherSellers = [], coup
                         )}
 
                         <form onSubmit={submit} className="mt-6">
-                            {options.map((option) => {
-                                const asSwatches = isColorOption(option.name);
-
-                                return (
-                                    <div key={option.id} className="mb-4">
-                                        <label className="mb-2 block text-sm font-medium text-neutral-700">
-                                            {t(option.name)}
-                                        </label>
-                                        <div className="flex flex-wrap items-center gap-2.5">
-                                            {option.values.map((value) => {
-                                                const selected = selection[option.id] === value.id;
-                                                const swatch = asSwatches ? resolveColorSwatch(value.value) : null;
-                                                const label = t(value.value);
-
-                                                if (swatch) {
-                                                    const isLight = ['#ffffff', '#e8d5b7', '#eab308', '#c0c0c0'].includes(
-                                                        swatch.toLowerCase(),
-                                                    );
-
-                                                    return (
-                                                        <button
-                                                            type="button"
-                                                            key={value.id}
-                                                            onClick={() => selectValue(option.id, value.id)}
-                                                            title={label}
-                                                            aria-label={label}
-                                                            aria-pressed={selected}
-                                                            className={`relative h-9 w-9 rounded-full transition ${
-                                                                selected
-                                                                    ? 'ring-2 ring-tb ring-offset-2'
-                                                                    : 'ring-1 ring-neutral-300 hover:ring-tb/60'
-                                                            }`}
-                                                            style={{ backgroundColor: swatch }}
-                                                        >
-                                                            {isLight && (
-                                                                <span className="pointer-events-none absolute inset-0 rounded-full border border-neutral-200" />
-                                                            )}
-                                                        </button>
-                                                    );
-                                                }
-
-                                                return (
-                                                    <button
-                                                        type="button"
-                                                        key={value.id}
-                                                        onClick={() => selectValue(option.id, value.id)}
-                                                        className={`rounded-md border px-3 py-1.5 text-sm ${
-                                                            selected
-                                                                ? 'border-orange-600 bg-orange-600 text-white'
-                                                                : 'border-neutral-300 text-neutral-700 hover:border-orange-400'
-                                                        }`}
-                                                    >
-                                                        {label}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                );
-                            })}
+                            {options.length > 0 && (
+                                <div className="mb-5">
+                                    <VariantOptions options={options} selection={selection} onSelect={selectValue} />
+                                </div>
+                            )}
 
                             {options.length > 0 && !variant && (
                                 <p className="mb-4 text-sm text-neutral-500">Select an option combination to see price and availability.</p>
@@ -487,7 +489,7 @@ export default function Show({ product, relatedProducts, otherSellers = [], coup
                 </div>
 
                 {/* Reviews */}
-                <section className="mt-12">
+                <section className="mt-10 border-t border-neutral-100 pt-8">
                     <h2 className="mb-4 text-lg font-bold text-neutral-900">{__('Reviews')} ({reviews.length})</h2>
                     {reviews.length === 0 ? (
                         <p className="text-sm text-neutral-400">{__('No reviews yet.')}</p>
@@ -513,6 +515,7 @@ export default function Show({ product, relatedProducts, otherSellers = [], coup
                         </div>
                     )}
                 </section>
+                </div>
 
                 {/* Other sellers of the same product */}
                 {otherSellers.length > 0 && (

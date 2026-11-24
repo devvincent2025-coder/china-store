@@ -138,7 +138,7 @@ class Seo
                 '@type' => 'Offer',
                 'url' => $canonicalUrl,
                 'priceCurrency' => 'NGN',
-                'price' => number_format($product->price / 100, 2, '.', ''),
+                'price' => number_format($product->effective_price / 100, 2, '.', ''),
                 'availability' => $product->isInStock()
                     ? 'https://schema.org/InStock'
                     : 'https://schema.org/OutOfStock',
@@ -262,7 +262,7 @@ class Seo
             'robots' => self::productIsIndexable($product) ? 'index,follow' : 'noindex,follow',
             'alternates' => self::alternates($request),
             'product' => [
-                'price' => number_format($product->price / 100, 2, '.', ''),
+                'price' => number_format($product->effective_price / 100, 2, '.', ''),
                 'currency' => 'NGN',
                 'availability' => $product->isInStock() ? 'instock' : 'oos',
             ],
@@ -386,9 +386,19 @@ class Seo
         $canonical = self::absoluteUrl('/');
 
         return [
-            'title' => self::SITE_NAME.' - Shop Chinese-Run Stores in Nigeria | Fast Delivery, Naira Prices',
-            'description' => 'Shop quality products from verified Chinese-run vendors across Nigeria. Naira pricing, fast local delivery, and every order protected until you confirm you\'re happy.',
-            'keywords' => self::keywords(['chinainnigeria', 'chinese vendors nigeria', 'shop online nigeria', 'buy online naira', 'verified vendors nigeria']),
+            'title' => self::SITE_NAME.' - Chinese Stores in Nigeria | Verified Vendors, Fast Delivery, Naira Prices',
+            'description' => 'Shop Chinese-run stores already based in Nigeria. Verified vendors, Naira pricing, fast local delivery, and every order protected by escrow until you confirm you\'re happy.',
+            'keywords' => self::keywords([
+                'chinainnigeria',
+                'chinese stores in nigeria',
+                'chinese products in nigeria',
+                'chinese vendors nigeria',
+                'chinese sellers nigeria',
+                'shop online nigeria',
+                'buy online naira',
+                'verified vendors nigeria',
+                'buy chinese products online nigeria',
+            ]),
             'canonical' => $canonical,
             'image' => self::absoluteUrl(self::DEFAULT_IMAGE),
             'type' => 'website',
@@ -398,7 +408,52 @@ class Seo
             // HandleInertiaRequests) already contributes it, and the Blade/SeoHead renderers both
             // CONCATENATE seoDefaults.jsonLd with this page's jsonLd rather than replacing it, so
             // returning it again here would render Organization/WebSite twice on the homepage.
-            'jsonLd' => [],
+            'jsonLd' => [self::faqJsonLd(self::homeFaqs())],
+        ];
+    }
+
+    /**
+     * Single source of truth for the homepage FAQ: HomeController passes this same array to
+     * Home.jsx as a `faqs` prop (rendered as real, visible on-page content) so it stays byte-for-byte
+     * in sync with the FAQPage JSON-LD built from it here — see faqJsonLd()'s doc comment on why a
+     * mismatch between the two would violate Google's FAQPage guidelines.
+     */
+    public static function homeFaqs(): array
+    {
+        // Admin-edited FAQ section (Filament → Homepage sections) wins, in the current locale with
+        // English fallback; the built-in list below is only used if that section is missing/empty.
+        $section = \App\Models\HomeSection::query()->live()->where('type', 'faq')->orderBy('sort_order')->first();
+        $locale = app()->getLocale();
+        $edited = collect($section?->settings['faqs'] ?? [])
+            ->map(fn ($item) => [
+                'question' => trim((string) (($item['question'][$locale] ?? null) ?: ($item['question']['en'] ?? ''))),
+                'answer' => trim((string) (($item['answer'][$locale] ?? null) ?: ($item['answer']['en'] ?? ''))),
+            ])
+            ->filter(fn ($faq) => $faq['question'] !== '' && $faq['answer'] !== '')
+            ->values()
+            ->all();
+
+        if ($edited !== []) {
+            return $edited;
+        }
+
+        return [
+            [
+                'question' => 'Are there Chinese stores I can buy from directly in Nigeria?',
+                'answer' => 'Yes. '.self::SITE_NAME.' hosts Chinese-run vendor stores already based in Nigeria, so you buy directly from a local seller and pay in Naira — no importing or waiting on international shipping.',
+            ],
+            [
+                'question' => 'Is it safe to buy from Chinese vendors online in Nigeria?',
+                'answer' => 'Every vendor on '.self::SITE_NAME.' goes through identity verification before they can sell, and every order is held in escrow and only released to the vendor once you confirm you\'re happy with what you received.',
+            ],
+            [
+                'question' => 'How is delivery handled?',
+                'answer' => 'Vendors ship from their local Nigerian base, so delivery times and costs are typically faster and cheaper than ordering directly from China.',
+            ],
+            [
+                'question' => 'Do I pay in Naira?',
+                'answer' => 'Yes, every price on '.self::SITE_NAME.' is listed and charged in Naira, with no foreign currency conversion or customs charges to worry about.',
+            ],
         ];
     }
 

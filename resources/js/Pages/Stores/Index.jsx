@@ -1,15 +1,16 @@
-import { Head, Link } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import StorefrontLayout from '@/Layouts/StorefrontLayout';
+import SeoHead from '@/Components/SeoHead';
 import { t } from '@/utils/translatable';
 import { useTranslation } from '@/hooks/useTranslation';
 
-export default function Index({ stores }) {
+export default function Index({ stores, seo }) {
     const { __ } = useTranslation();
     const rows = stores?.data ?? stores ?? [];
 
     return (
         <StorefrontLayout>
-            <Head title={__('Stores')} />
+            <SeoHead seo={seo} />
 
             <div className="mx-auto max-w-marketplace px-2 py-6 sm:px-3">
                 <h1 className="font-display text-2xl font-bold text-tb-text">{__('Stores')}</h1>

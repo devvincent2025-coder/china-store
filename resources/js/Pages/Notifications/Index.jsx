@@ -30,7 +30,7 @@ export default function Index({ notifications, vendor }) {
         <Layout {...layoutProps}>
             <Head title={__('Notifications')} />
 
-            <div className={auth?.isVendor ? '' : 'mx-auto max-w-2xl px-4 py-6 sm:px-6 lg:px-8'}>
+            <div className={auth?.isVendor ? '' : 'mx-auto max-w-marketplace px-4 py-6 sm:px-6 lg:px-8'}>
                 <div className="mb-6 flex items-center justify-between">
                     <h1 className="text-xl font-bold text-neutral-900">{__('Notifications')}</h1>
                     <button type="button" onClick={markAllRead} className="text-sm font-semibold text-orange-600 hover:underline">

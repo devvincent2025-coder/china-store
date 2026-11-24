@@ -16,7 +16,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // One deal-price lookup per request/job — see DealPricing's doc comment.
+        $this->app->scoped(\App\Services\Pricing\DealPricing::class);
     }
 
     /**

@@ -25,7 +25,7 @@ export default function Create({ vendor }) {
         <Layout {...layoutProps}>
             <Head title={__('New Support Ticket')} />
 
-            <div className={auth?.isVendor ? 'max-w-xl' : 'mx-auto max-w-xl px-4 py-6 sm:px-6 lg:px-8'}>
+            <div className={auth?.isVendor ? 'max-w-xl' : 'mx-auto max-w-marketplace px-4 py-6 sm:px-6 lg:px-8'}>
                 <h1 className="mb-6 text-xl font-bold text-neutral-900">{__('New Support Ticket')}</h1>
 
                 <form onSubmit={submit} className="space-y-4 rounded-lg border border-neutral-200 bg-white p-5">
